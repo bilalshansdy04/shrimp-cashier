@@ -1,0 +1,79 @@
+export interface StoreSettings {
+  id: string;
+  nama: string;
+  alamat: string;
+  telp: string;
+  footer: string;
+  rekening: string;
+  updated_at?: string;
+}
+
+export interface Cashier {
+  id: string;
+  nama: string;
+  pin: string;
+  peran: "admin" | "kasir";
+  created_at?: string;
+}
+
+export interface ProductVariant {
+  id: string;
+  product_id?: string;
+  nama: string;
+  harga: number;
+}
+
+export interface Product {
+  id: string;
+  nama: string;
+  kategori: string;
+  stok: number;
+  foto?: string;
+  varian: ProductVariant[];
+  created_at?: string;
+}
+
+export interface CartItem {
+  pid: string;
+  nama: string;
+  varian: string;
+  harga: number;
+  qty: number;
+  foto?: string;
+  kategori?: string;
+}
+
+export interface TransactionItem {
+  id: string;
+  transaction_id?: string;
+  product_id: string;
+  nama: string;
+  varian: string;
+  harga: number;
+  qty: number;
+}
+
+export interface Transaction {
+  id: string;
+  waktu: string;
+  kasir_nama: string;
+  subtotal: number;
+  diskon: number;
+  total: number;
+  metode: "tunai" | "qris" | "transfer";
+  bayar: number;
+  kembali: number;
+  status: "selesai" | "dibatalkan";
+  items: TransactionItem[];
+  created_at?: string;
+}
+
+export interface SalesReport {
+  omzet: number;
+  trx: number;
+  item: number;
+  rata: number;
+  top: { nama: string; qty: number; nilai: number }[];
+  metode: { tunai: number; qris: number; transfer: number };
+  chart: { label: string; value: number }[];
+}
