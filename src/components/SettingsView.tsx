@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { StoreSettings, Cashier } from "@/types";
+import { StoreSettings, Cashier, ColorPalette } from "@/types";
 import { downloadFile, formatDateKey, parseCSV, escapeCSVCell } from "@/lib/format";
 import { playBeep } from "@/lib/audio";
+import { DEFAULT_PALETTES, applyPalette } from "@/lib/theme";
 import {
   Store,
   Users,
@@ -16,6 +17,9 @@ import {
   FileSpreadsheet,
   Save,
   CheckCircle2,
+  Palette,
+  Check,
+  Sparkles,
 } from "lucide-react";
 
 interface SettingsViewProps {
@@ -43,6 +47,143 @@ export function SettingsView({
   const [newCashierPin, setNewCashierPin] = useState<string>("");
   const [newCashierRole, setNewCashierRole] = useState<"admin" | "kasir">("kasir");
   const [isAddingCashier, setIsAddingCashier] = useState<boolean>(false);
+
+  // Palette & Color States
+  const [activePrimary, setActivePrimary] = useState<string>(settings.theme_primary || "#f97316");
+  const [activeSurface, setActiveSurface] = useState<string>(settings.theme_surface || "#1a1c22");
+  const [customPalettes, setCustomPalettes] = useState<ColorPalette[]>(() => {
+    try {
+      return settings.custom_palettes ? JSON.parse(settings.custom_palettes) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [newPaletteName, setNewPaletteName] = useState<string>("");
+  const [paletteSavedMsg, setPaletteSavedMsg] = useState<string>("");
+  const [isSavingPalette, setIsSavingPalette] = useState<boolean>(false);
+
+  const handleSelectPalette = async (palette: ColorPalette) => {
+    try {
+      setActivePrimary(palette.primary);
+      setActiveSurface(palette.surface);
+      applyPalette(palette.primary, palette.surface);
+
+      const res = await fetch("/api/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          theme_primary: palette.primary,
+          theme_surface: palette.surface,
+        }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.message);
+
+      playBeep();
+      setPaletteSavedMsg(`Palet "${palette.name}" aktif`);
+      setTimeout(() => setPaletteSavedMsg(""), 3000);
+      onRefreshAll();
+    } catch (err: any) {
+      alert(err.message || "Gagal menerapkan palet");
+    }
+  };
+
+  const handleColorChange = (primary: string, surface: string) => {
+    setActivePrimary(primary);
+    setActiveSurface(surface);
+    applyPalette(primary, surface);
+  };
+
+  const handleSaveCurrentColors = async () => {
+    try {
+      setIsSavingPalette(true);
+      const res = await fetch("/api/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          theme_primary: activePrimary,
+          theme_surface: activeSurface,
+        }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.message);
+
+      playBeep();
+      setPaletteSavedMsg("Warna tema berhasil disimpan");
+      setTimeout(() => setPaletteSavedMsg(""), 3000);
+      onRefreshAll();
+    } catch (err: any) {
+      alert(err.message || "Gagal menyimpan warna tema");
+    } finally {
+      setIsSavingPalette(false);
+    }
+  };
+
+  const handleAddCustomPalette = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPaletteName.trim()) {
+      alert("Masukkan nama set palet terlebih dahulu");
+      return;
+    }
+
+    const newPal: ColorPalette = {
+      id: `custom-${Date.now()}`,
+      name: newPaletteName.trim(),
+      primary: activePrimary,
+      surface: activeSurface,
+      isCustom: true,
+    };
+
+    const updated = [...customPalettes, newPal];
+    try {
+      setIsSavingPalette(true);
+      const res = await fetch("/api/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          theme_primary: activePrimary,
+          theme_surface: activeSurface,
+          custom_palettes: JSON.stringify(updated),
+        }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.message);
+
+      setCustomPalettes(updated);
+      setNewPaletteName("");
+      playBeep();
+      setPaletteSavedMsg(`Set palet "${newPal.name}" berhasil ditambahkan!`);
+      setTimeout(() => setPaletteSavedMsg(""), 3000);
+      onRefreshAll();
+    } catch (err: any) {
+      alert(err.message || "Gagal menambahkan set palet");
+    } finally {
+      setIsSavingPalette(false);
+    }
+  };
+
+  const handleDeleteCustomPalette = async (paletteId: string) => {
+    if (!confirm("Hapus set palet kustom ini?")) return;
+
+    const updated = customPalettes.filter((p) => p.id !== paletteId);
+    try {
+      const res = await fetch("/api/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          custom_palettes: JSON.stringify(updated),
+        }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.message);
+
+      setCustomPalettes(updated);
+      playBeep();
+      onRefreshAll();
+    } catch (err: any) {
+      alert(err.message || "Gagal menghapus palet kustom");
+    }
+  };
 
   const handleSaveStore = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -260,8 +401,230 @@ export function SettingsView({
           Pengaturan &amp; Data
         </h2>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Profil toko, akun kasir PIN, dan pencadangan database
+          Palet warna kustom, profil toko, akun kasir PIN, dan pencadangan database
         </p>
+      </div>
+
+      {/* Color Palette & Customizer Section (Anti-Slop, No Harsh Outlines) */}
+      <div className="p-6 rounded-3xl bg-card shadow-xs space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+          <div className="flex items-center gap-2">
+            <Palette className="w-5 h-5 text-primary" />
+            <div>
+              <h3 className="font-black text-base text-foreground">
+                Kustomisasi Warna &amp; Palet Kasir
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Pilih tema preset, atur warna tombol &amp; panel, atau tambah set palet kustom
+              </p>
+            </div>
+          </div>
+
+          {paletteSavedMsg && (
+            <div className="px-3.5 py-1.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-semibold flex items-center gap-1.5 self-start sm:self-auto animate-fadeIn">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>{paletteSavedMsg}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Info Box: Neutral background rule */}
+        <div className="p-4 rounded-2xl bg-muted/40 text-xs text-muted-foreground flex items-center gap-3">
+          <Sparkles className="w-4 h-4 text-primary shrink-0" />
+          <span>
+            Warna latar utama layar (canvas background) tetap dipertahankan putih bersih pada light mode dan gelap natural pada dark mode demi keterbacaan kasir yang tajam dan nyaman di mata.
+          </span>
+        </div>
+
+        {/* 1. Palette Collection Grid */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-foreground">
+              Koleksi Set Palet Tersedia
+            </span>
+            <span className="text-[11px] text-muted-foreground">
+              Klik untuk langsung mengaktifkan
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {[...DEFAULT_PALETTES, ...customPalettes].map((pal) => {
+              const isSelected =
+                activePrimary.toLowerCase() === pal.primary.toLowerCase() &&
+                activeSurface.toLowerCase() === pal.surface.toLowerCase();
+
+              return (
+                <div
+                  key={pal.id}
+                  onClick={() => handleSelectPalette(pal)}
+                  className={`group relative p-3 rounded-2xl cursor-pointer transition-all ${
+                    isSelected
+                      ? "bg-muted ring-2 ring-primary shadow-xs"
+                      : "bg-muted/40 hover:bg-muted/70"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-bold text-xs text-foreground truncate pr-1">
+                      {pal.name}
+                    </span>
+                    {isSelected && (
+                      <span className="w-4 h-4 rounded-full bg-primary text-white flex items-center justify-center shrink-0">
+                        <Check className="w-2.5 h-2.5 stroke-[3]" />
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Visual Swatch Preview */}
+                  <div
+                    className="h-10 rounded-xl p-2 flex items-center justify-between shadow-2xs"
+                    style={{ backgroundColor: pal.surface }}
+                  >
+                    <span className="text-[10px] font-semibold text-white/75 px-1 truncate">
+                      Panel
+                    </span>
+                    <div
+                      className="w-6 h-6 rounded-lg flex items-center justify-center shadow-xs text-white"
+                      style={{ backgroundColor: pal.primary }}
+                      title={`Aksen: ${pal.primary}`}
+                    >
+                      <div className="w-2 h-2 rounded-full bg-white/80" />
+                    </div>
+                  </div>
+
+                  {/* Custom Palette Delete Button */}
+                  {pal.isCustom && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteCustomPalette(pal.id);
+                      }}
+                      className="absolute top-2 right-2 p-1 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg cursor-pointer transition-colors"
+                      title="Hapus set palet ini"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 2. Interactive Color Pickers */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+          {/* Picker 1: Button / Accent */}
+          <div className="p-4 rounded-2xl bg-muted/30 space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-foreground">
+                Warna Tombol &amp; Aksen
+              </label>
+              <span className="text-[11px] font-mono font-bold text-muted-foreground">
+                {activePrimary}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <input
+                type="color"
+                value={activePrimary}
+                onChange={(e) => handleColorChange(e.target.value, activeSurface)}
+                className="w-12 h-10 rounded-xl cursor-pointer bg-transparent border-0"
+              />
+              <input
+                type="text"
+                value={activePrimary}
+                onChange={(e) => handleColorChange(e.target.value, activeSurface)}
+                placeholder="#f97316"
+                maxLength={7}
+                className="flex-1 px-3 py-2 text-xs font-mono rounded-xl bg-card focus:outline-none focus:ring-1 focus:ring-primary text-foreground"
+              />
+            </div>
+
+            <div className="pt-1">
+              <button
+                type="button"
+                style={{ backgroundColor: activePrimary }}
+                className="w-full py-2.5 rounded-full text-white font-bold text-xs shadow-xs transition-opacity hover:opacity-90 cursor-default"
+              >
+                Pratinjau Tombol Aksen ({activePrimary})
+              </button>
+            </div>
+          </div>
+
+          {/* Picker 2: Panel & Navbottom */}
+          <div className="p-4 rounded-2xl bg-muted/30 space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-foreground">
+                Warna Panel &amp; Navbottom
+              </label>
+              <span className="text-[11px] font-mono font-bold text-muted-foreground">
+                {activeSurface}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <input
+                type="color"
+                value={activeSurface}
+                onChange={(e) => handleColorChange(activePrimary, e.target.value)}
+                className="w-12 h-10 rounded-xl cursor-pointer bg-transparent border-0"
+              />
+              <input
+                type="text"
+                value={activeSurface}
+                onChange={(e) => handleColorChange(activePrimary, e.target.value)}
+                placeholder="#1a1c22"
+                maxLength={7}
+                className="flex-1 px-3 py-2 text-xs font-mono rounded-xl bg-card focus:outline-none focus:ring-1 focus:ring-primary text-foreground"
+              />
+            </div>
+
+            <div className="pt-1">
+              <div
+                style={{ backgroundColor: activeSurface }}
+                className="w-full py-2.5 px-4 rounded-2xl text-white font-bold text-xs shadow-xs flex items-center justify-between"
+              >
+                <span>Pratinjau Panel / Navbottom</span>
+                <span className="text-[10px] opacity-75 font-mono">{activeSurface}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 3. Actions: Tambah Set Palet Baru / Simpan Aktif */}
+        <div className="p-4 rounded-2xl bg-muted/30 flex flex-col md:flex-row items-center justify-between gap-4">
+          <form
+            onSubmit={handleAddCustomPalette}
+            className="flex-1 w-full flex items-center gap-2"
+          >
+            <input
+              type="text"
+              placeholder="Nama set baru (cth: Kedai Hijau, Neon Malam)..."
+              value={newPaletteName}
+              onChange={(e) => setNewPaletteName(e.target.value)}
+              className="flex-1 px-4 py-2.5 text-xs rounded-xl bg-card focus:outline-none focus:ring-1 focus:ring-primary text-foreground"
+            />
+            <button
+              type="submit"
+              disabled={!newPaletteName.trim()}
+              className="px-5 py-2.5 rounded-full bg-primary text-white font-bold text-xs disabled:opacity-40 hover:opacity-90 transition-opacity cursor-pointer shrink-0 flex items-center gap-1.5 shadow-2xs"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Tambah Set Palet</span>
+            </button>
+          </form>
+
+          <button
+            type="button"
+            onClick={handleSaveCurrentColors}
+            disabled={isSavingPalette}
+            className="w-full md:w-auto px-6 py-2.5 rounded-full bg-card hover:bg-muted font-bold text-xs text-foreground transition-colors cursor-pointer shadow-xs flex items-center justify-center gap-1.5 shrink-0"
+          >
+            <Save className="w-3.5 h-3.5 text-primary" />
+            <span>Simpan Warna Aktif</span>
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -352,7 +715,7 @@ export function SettingsView({
             <button
               type="submit"
               disabled={isSavingStore}
-              className="w-full py-3.5 rounded-full bg-primary text-white font-black text-sm hover:bg-orange-600 transition-colors shadow-sm cursor-pointer flex items-center justify-center gap-2"
+              className="w-full py-3.5 rounded-full bg-primary text-white font-black text-sm hover:opacity-90 transition-opacity shadow-sm cursor-pointer flex items-center justify-center gap-2"
             >
               <Save className="w-4 h-4" />
               <span>{isSavingStore ? "Menyimpan..." : "Simpan Profil Toko"}</span>
@@ -454,7 +817,7 @@ export function SettingsView({
               <button
                 type="submit"
                 disabled={isAddingCashier}
-                className="px-5 py-2 rounded-full bg-primary text-white font-bold text-xs hover:bg-orange-600 transition-colors shadow-2xs cursor-pointer flex items-center gap-1.5 shrink-0"
+                className="px-5 py-2 rounded-full bg-primary text-white font-bold text-xs hover:opacity-90 transition-opacity shadow-2xs cursor-pointer flex items-center gap-1.5 shrink-0"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Tambah</span>

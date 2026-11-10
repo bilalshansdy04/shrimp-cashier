@@ -252,7 +252,7 @@ export function ProductsManagement({
           <button
             type="button"
             onClick={openAddForm}
-            className="px-5 py-2.5 rounded-full bg-primary text-white hover:bg-orange-600 font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-md shadow-primary/20"
+            className="px-5 py-2.5 rounded-full bg-primary text-white hover:opacity-90 font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-md shadow-black/10"
           >
             <Plus className="w-4 h-4" />
             <span>Tambah Produk</span>
@@ -571,7 +571,7 @@ export function ProductsManagement({
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="px-6 py-2.5 rounded-full bg-primary text-white font-bold text-xs hover:bg-orange-600 shadow-md shadow-primary/20 cursor-pointer"
+                  className="px-6 py-2.5 rounded-full bg-primary text-white font-bold text-xs hover:opacity-90 shadow-md shadow-black/10 cursor-pointer"
                 >
                   {isSaving ? "Menyimpan..." : "Simpan Produk"}
                 </button>
@@ -622,7 +622,7 @@ export function ProductsManagement({
               <button
                 type="button"
                 onClick={handleSaveStock}
-                className="flex-1 py-2.5 rounded-full bg-primary text-white text-xs font-bold hover:bg-orange-600 shadow-sm"
+                className="flex-1 py-2.5 rounded-full bg-primary text-white text-xs font-bold hover:opacity-90 shadow-sm"
               >
                 Simpan
               </button>
@@ -683,7 +683,7 @@ export function ProductsManagement({
               <button
                 type="button"
                 onClick={handleAddCategory}
-                className="px-4 py-2 rounded-full bg-primary text-white text-xs font-bold hover:bg-orange-600 cursor-pointer shrink-0"
+                className="px-4 py-2 rounded-full bg-primary text-white text-xs font-bold hover:opacity-90 cursor-pointer shrink-0"
               >
                 Tambah
               </button>

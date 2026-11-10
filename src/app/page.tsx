@@ -14,6 +14,7 @@ import { PaymentModal } from "@/components/PaymentModal";
 import { SuccessReceiptModal } from "@/components/SuccessReceiptModal";
 import { ThermalReceipt } from "@/components/ThermalReceipt";
 import { playCashChime, playBeep } from "@/lib/audio";
+import { applyPalette, loadSavedPalette } from "@/lib/theme";
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -51,6 +52,13 @@ export default function Home() {
         setProducts(json.data.products);
         setNextTrxNo((json.data.todaySummary?.trxCount || 0) + 1);
 
+        if (json.data.settings?.theme_primary || json.data.settings?.theme_surface) {
+          applyPalette(
+            json.data.settings.theme_primary || "#f97316",
+            json.data.settings.theme_surface || "#1a1c22"
+          );
+        }
+
         const savedCashierId = sessionStorage.getItem("shrimpcashier_session");
         if (savedCashierId) {
           const found = json.data.cashiers.find((c: Cashier) => c.id === savedCashierId);
@@ -65,6 +73,8 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    const { primary, surface } = loadSavedPalette();
+    applyPalette(primary, surface);
     fetchState();
   }, [fetchState]);
 

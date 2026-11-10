@@ -26,9 +26,22 @@ export async function initDb() {
       telp TEXT,
       footer TEXT,
       rekening TEXT,
+      theme_primary TEXT DEFAULT '#f97316',
+      theme_surface TEXT DEFAULT '#1a1c22',
+      custom_palettes TEXT DEFAULT '[]',
       updated_at TEXT
     )
   `);
+
+  try {
+    await db.execute("ALTER TABLE settings ADD COLUMN theme_primary TEXT DEFAULT '#f97316'");
+  } catch (e) {}
+  try {
+    await db.execute("ALTER TABLE settings ADD COLUMN theme_surface TEXT DEFAULT '#1a1c22'");
+  } catch (e) {}
+  try {
+    await db.execute("ALTER TABLE settings ADD COLUMN custom_palettes TEXT DEFAULT '[]'");
+  } catch (e) {}
 
   // 2. Cashiers Table
   await db.execute(`

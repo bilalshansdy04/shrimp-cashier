@@ -271,7 +271,7 @@ export function PaymentModal({
               type="button"
               disabled={isSubmitting}
               onClick={handleComplete}
-              className="flex-2 py-3 rounded-full bg-primary text-white font-black text-sm hover:bg-orange-600 active:scale-98 shadow-lg shadow-primary/25 transition-all cursor-pointer flex items-center justify-center gap-2"
+              className="flex-2 py-3 rounded-full bg-primary text-white font-black text-sm hover:opacity-90 active:scale-98 shadow-lg shadow-black/10 transition-all cursor-pointer flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
                 <span>Memproses...</span>

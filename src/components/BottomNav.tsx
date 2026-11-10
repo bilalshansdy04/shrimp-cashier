@@ -38,7 +38,7 @@ export function BottomNav({
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-[#1a1c22]/95 backdrop-blur-xl shadow-[0_-6px_25px_rgba(0,0,0,0.08)] py-2 px-3 sm:px-6">
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl shadow-[0_-6px_25px_rgba(0,0,0,0.08)] py-2 px-3 sm:px-6">
       <nav className="max-w-2xl mx-auto flex items-center justify-between gap-1 sm:gap-2">
         {tabs.map((tab) => {
           if (tab.adminOnly && !isAdmin) return null;
@@ -53,18 +53,24 @@ export function BottomNav({
                 playBeep();
                 onTabChange(tab.id);
               }}
+              style={isActive ? { backgroundColor: "var(--primary)" } : undefined}
               className={`flex-1 relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 sm:py-2.5 px-2 rounded-2xl transition-all duration-200 cursor-pointer select-none ${
                 isActive
-                  ? "bg-orange-500 text-white shadow-lg shadow-orange-500/25 scale-102 font-extrabold"
-                  : "text-slate-700 dark:text-slate-200 hover:text-orange-600 hover:bg-orange-50/70 dark:hover:bg-neutral-800 font-bold"
+                  ? "text-white shadow-lg shadow-black/10 scale-102 font-black"
+                  : "text-slate-700 dark:text-slate-200 hover:text-[var(--primary)] hover:bg-slate-100 dark:hover:bg-neutral-800 font-bold"
               }`}
             >
               <div className="relative">
                 <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0" />
                 {tab.badge !== undefined && (
                   <span
+                    style={
+                      isActive
+                        ? { color: "var(--primary)" }
+                        : { backgroundColor: "var(--primary)" }
+                    }
                     className={`absolute -top-1.5 -right-2.5 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-black flex items-center justify-center shadow-xs ${
-                      isActive ? "bg-white text-orange-600" : "bg-orange-500 text-white"
+                      isActive ? "bg-white" : "text-white"
                     }`}
                   >
                     {tab.badge}
@@ -79,7 +85,7 @@ export function BottomNav({
         })}
 
         {/* Lock / switch cashier button */}
-        <div className="w-[1px] h-6 bg-neutral-200 dark:bg-neutral-800 mx-1 shrink-0" />
+        <div className="w-[1px] h-6 bg-slate-200 dark:bg-neutral-800 mx-1 shrink-0" />
         <button
           type="button"
           onClick={() => {

@@ -1,3 +1,11 @@
+export interface ColorPalette {
+  id: string;
+  name: string;
+  primary: string; // Button & Accent color (ex: #f97316)
+  surface: string; // Panel & Navbottom dark color (ex: #1a1c22)
+  isCustom?: boolean;
+}
+
 export interface StoreSettings {
   id: string;
   nama: string;
@@ -5,6 +13,9 @@ export interface StoreSettings {
   telp: string;
   footer: string;
   rekening: string;
+  theme_primary?: string;
+  theme_surface?: string;
+  custom_palettes?: string;
   updated_at?: string;
 }
 

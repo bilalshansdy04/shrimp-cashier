@@ -86,7 +86,7 @@ export function SuccessReceiptModal({
           <button
             type="button"
             onClick={onNewTransaction}
-            className="w-full py-3.5 rounded-full bg-primary text-white font-black text-sm hover:bg-orange-600 active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-primary/25"
+            className="w-full py-3.5 rounded-full bg-primary text-white font-black text-sm hover:opacity-90 active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-black/10"
           >
             <PlusCircle className="w-4 h-4" />
             <span>Transaksi Baru (Enter)</span>
