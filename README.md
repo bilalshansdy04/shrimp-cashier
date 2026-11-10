@@ -1,36 +1,130 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🦐 ShrimpCashier — Modern Interactive POS (Next.js + Turso)
 
-## Getting Started
+Aplikasi kasir (Point of Sale) modern, interaktif, responsif, dan siap cetak struk thermal 58mm. Dibuat dengan **Next.js (App Router)**, **Tailwind CSS**, dan **Turso LibSQL Database** (Local-first / Remote Cloud).
 
-First, run the development server:
+Aplikasi ini mereplikasi **100% fungsionalitas backend** dari `kasir-umkm-main` dengan desain antarmuka baru yang segar, taktil, dan kaya interaksi sesuai pedoman **UI/UX Pro Max**.
 
+---
+
+## ✨ Fitur Utama
+
+- ⚡ **Next.js App Router**: Arsitektur cepat dengan Server API Routes terintegrasi.
+- 🗄️ **Turso LibSQL Local-First**: Otomatis membuat database SQLite lokal `shrimpcashier.db` tanpa butuh cloud/internet. Siap beralih ke Turso Cloud kapan saja melalui environment variable.
+- 🎨 **Desain UI/UX Segar & Interaktif**:
+  - Palet Modern Coastal Slate & Coral Shrimp dengan mode Gelap / Terang (Dark/Light).
+  - Feedback Audio taktil via Web Audio API (beep scan, cash drawer chime, error shake) dengan tombol mute instan.
+  - Efek konfeti perayaan kemenangan saat transaksi berhasil diselesaikan.
+  - Kartu produk interaktif dengan ilustrasi tema makanan/minuman otomatis atau foto kustom, badge peringatan stok tipis (< 5), dan badge status habis.
+- 🛒 **POS Cepat & Keyboard Friendly**:
+  - Tombol pintas keyboard: `/` atau `F1` (Cari produk), `F2` (Bayar), `Esc` (Tutup dialog), `Enter` (Selesaikan/Konfirmasi).
+  - Popover pemilih varian dinamis (misal Reguler / Large, Hot / Ice).
+  - Tiket pesanan dengan stepper penambah/pengurang kuantitas.
+  - Diskon fleksibel (Rupiah atau Persentase %).
+- 💳 **Metode Pembayaran Lengkap**:
+  - **Tunai**: Numpad virtual interaktif, tombol uang cepat (*Uang pas*, Rp20rb, Rp50rb, Rp100rb), dan kalkulasi kembalian otomatis dengan deteksi uang kurang.
+  - **QRIS**: Tampilan kode QRIS statis siap pindai.
+  - **Transfer Bank**: Salin nomor rekening toko dengan 1 klik.
+- 🖨️ **Struk Thermal 58mm**: Siap cetak ke printer thermal (Bluetooth/USB) dengan dialog print browser (`Ctrl+P` otomatis).
+- 📦 **Manajemen Produk & Kategori**:
+  - Tambah, edit, dan hapus produk dengan banyak varian harga.
+  - Tombol cepat `+Stok` untuk *restock* kilat.
+  - Kompresi foto otomatis di browser saat upload.
+  - Kelola kategori produk dengan proteksi kategori yang masih digunakan.
+- 📜 **Riwayat & Pembatalan Transaksi**:
+  - Filter riwayat per tanggal dan pencarian.
+  - Cetak ulang struk transaksi lama.
+  - Batalkan transaksi dengan pengembalian stok barang otomatis.
+  - Ekspor riwayat transaksi ke CSV untuk Excel / Google Sheets.
+- 📊 **Laporan & Analitik**:
+  - Mode harian (grafik penjualan per jam 07:00–22:00) dan mode bulanan (grafik per tanggal).
+  - Kartu metrik KPI: Omzet, Total Transaksi, Item Terjual, Rata-rata per struk.
+  - Papan peringkat produk terlaris dengan medali 🥇 🥈 🥉.
+  - Distribusi persentase per metode pembayaran.
+- 🔐 **Multi-Kasir dengan PIN**:
+  - Login layar kunci PIN 4-6 angka.
+  - Kasir contoh: **Admin** (PIN `1234`), **Sari** (PIN `1111`).
+  - Pemisahan hak akses: Peran *Admin* dapat mengelola produk dan pengaturan; peran *Kasir* hanya memproses pesanan.
+- 💾 **Backup & Pemulihan Data**:
+  - Ekspor & Impor produk format CSV.
+  - Backup seluruh data ke JSON dan pemulihan backup 1-klik (100% kompatibel dengan data `kasir-umkm-main`).
+  - Tombol muat data contoh (30 hari riwayat transaksi) atau reset mulai dari nol.
+
+---
+
+## 🚀 Cara Menjalankan
+
+### 1. Masuk ke folder proyek
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cd "d:\Projects\Shrimp Kasir\shrimpcashier"
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Jalankan server dev
+```bash
+npm run dev
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Buka browser di:
+👉 **http://localhost:3000**
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Pilih **Admin** dan masukkan PIN **1234** (atau **Sari** dengan PIN **1111**).
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 🗄️ Konfigurasi Turso DB
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Secara bawaan, aplikasi berjalan dalam **Mode Lokal** menggunakan database file SQLite/LibSQL di `./shrimpcashier.db`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Jika ingin menghubungkan ke database Turso di cloud:
+1. Buat database di Turso CLI: `turso db create shrimpcashier`
+2. Dapatkan token autentikasi: `turso db tokens create shrimpcashier`
+3. Buat file `.env.local` di folder `shrimpcashier/`:
+```env
+TURSO_DATABASE_URL=libsql://shrimpcashier-username.turso.io
+TURSO_AUTH_TOKEN=your_auth_token_here
+```
+Aplikasi akan otomatis menyambung ke remote Turso tanpa perlu perubahan kode!
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📁 Struktur Folder
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+shrimpcashier/
+├── public/                 # Aset statis (qris.svg, ikon.svg)
+├── src/
+│   ├── app/
+│   │   ├── api/            # Server Backend API Routes
+│   │   │   ├── auth/login/ # Verifikasi PIN Kasir
+│   │   │   ├── backup/     # Backup & Restore JSON
+│   │   │   ├── cashiers/   # CRUD Kasir
+│   │   │   ├── categories/ # CRUD Kategori
+│   │   │   ├── pos/state/  # Fetch state awal POS
+│   │   │   ├── products/   # CRUD Produk & Varian
+│   │   │   ├── reports/    # Laporan & Analitik Penjualan
+│   │   │   ├── reset/      # Reset data atau muat ulang demo
+│   │   │   ├── settings/   # Profil Toko
+│   │   │   └── transactions/# Transaksi & Pengembalian Stok
+│   │   ├── globals.css     # Tailwind v4, tema terang/gelap & styling struk cetak
+│   │   ├── layout.tsx      # Root HTML Layout
+│   │   └── page.tsx        # Halaman Utama POS
+│   ├── components/         # Komponen UI Interaktif
+│   │   ├── HistoryView.tsx # Riwayat transaksi & ekspor CSV
+│   │   ├── PaymentModal.tsx# Dialog bayar + Numpad & Quick cash
+│   │   ├── PinLoginModal.tsx# Layar masuk kasir dengan PIN
+│   │   ├── POSView.tsx     # Katalog menu & tiket pesanan
+│   │   ├── ProductsManagement.tsx # Kelola produk, varian & stok
+│   │   ├── ReportsView.tsx # Grafik jam sibuk, metrik & leaderboard
+│   │   ├── SettingsView.tsx# Profil toko, kasir & alat data
+│   │   ├── Sidebar.tsx     # Navigasi rel samping & kontrol tema
+│   │   ├── SuccessReceiptModal.tsx # Sukses transaksi + konfeti
+│   │   └── ThermalReceipt.tsx      # Format struk thermal 58mm
+│   ├── lib/
+│   │   ├── audio.ts        # Sintesis efek suara Web Audio API
+│   │   ├── db.ts           # Koneksi Turso LibSQL & auto-seed
+│   │   └── format.ts       # Format rupiah, tanggal & utilitas CSV
+│   └── types/
+│       └── index.ts        # TypeScript Interfaces
+├── .env.example            # Contoh konfigurasi Turso
+├── package.json
+└── tsconfig.json
+```
