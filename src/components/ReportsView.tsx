@@ -68,10 +68,10 @@ export function ReportsView() {
                 setMode("hari");
                 playBeep();
               }}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+              className={`px-4 py-1.5 rounded-full text-xs font-black transition-all cursor-pointer ${
                 mode === "hari"
                   ? "bg-primary text-white shadow-xs"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-foreground/75 hover:text-foreground hover:bg-muted/50"
               }`}
             >
               Harian (Per Jam)
@@ -82,10 +82,10 @@ export function ReportsView() {
                 setMode("bulan");
                 playBeep();
               }}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+              className={`px-4 py-1.5 rounded-full text-xs font-black transition-all cursor-pointer ${
                 mode === "bulan"
                   ? "bg-primary text-white shadow-xs"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-foreground/75 hover:text-foreground hover:bg-muted/50"
               }`}
             >
               Bulanan (Per Tanggal)

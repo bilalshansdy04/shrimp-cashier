@@ -57,11 +57,11 @@ export function BottomNav({
               className={`flex-1 relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 sm:py-2.5 px-2 rounded-2xl transition-all duration-200 cursor-pointer select-none ${
                 isActive
                   ? "text-white shadow-lg shadow-black/10 scale-102 font-black"
-                  : "text-slate-700 dark:text-slate-200 hover:text-[var(--primary)] hover:bg-slate-100 dark:hover:bg-neutral-800 font-bold"
+                  : "text-foreground hover:text-primary hover:bg-muted/70 font-black"
               }`}
             >
               <div className="relative">
-                <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0" />
+                <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0 stroke-[2.4]" />
                 {tab.badge !== undefined && (
                   <span
                     style={
@@ -77,7 +77,7 @@ export function BottomNav({
                   </span>
                 )}
               </div>
-              <span className="text-[11px] sm:text-xs tracking-tight">
+              <span className="text-[11px] sm:text-xs tracking-tight font-extrabold">
                 {tab.label}
               </span>
             </button>
@@ -85,7 +85,7 @@ export function BottomNav({
         })}
 
         {/* Lock / switch cashier button */}
-        <div className="w-[1px] h-6 bg-slate-200 dark:bg-neutral-800 mx-1 shrink-0" />
+        <div className="w-[1px] h-6 bg-muted mx-1 shrink-0" />
         <button
           type="button"
           onClick={() => {
@@ -93,10 +93,10 @@ export function BottomNav({
             onLock();
           }}
           title={`Kasir: ${currentCashier.nama} (Klik untuk ganti)`}
-          className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-2.5 px-2.5 rounded-2xl text-slate-600 dark:text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors cursor-pointer shrink-0"
+          className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-2.5 px-2.5 rounded-2xl text-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer shrink-0 font-black"
         >
-          <Lock className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-          <span className="text-[11px] sm:text-xs font-bold max-w-[70px] truncate">
+          <Lock className="w-4 h-4 sm:w-4.5 sm:h-4.5 stroke-[2.4]" />
+          <span className="text-[11px] sm:text-xs font-extrabold max-w-[70px] truncate">
             {currentCashier.nama}
           </span>
         </button>
