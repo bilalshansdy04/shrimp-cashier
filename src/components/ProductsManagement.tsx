@@ -388,6 +388,9 @@ export function ProductsManagement({
             );
           })
         )}
+
+        {/* Spacer Fisik Bawah agar tidak tertutup Bottom Nav */}
+        <div className="h-32 w-full shrink-0 pointer-events-none" aria-hidden="true" />
       </div>
 
       {/* Add / Edit Product Modal (No outlines) */}

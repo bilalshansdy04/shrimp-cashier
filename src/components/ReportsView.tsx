@@ -311,6 +311,9 @@ export function ReportsView() {
           </div>
         </div>
       </div>
+
+      {/* Spacer Fisik Bawah agar konten tidak tertutup Bottom Nav */}
+      <div className="h-32 w-full shrink-0 pointer-events-none" aria-hidden="true" />
     </div>
   );
 }

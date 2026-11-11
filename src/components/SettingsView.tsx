@@ -1243,6 +1243,9 @@ export function SettingsView({
         </div>
       </div>
 
+      {/* Spacer Fisik Bawah agar konten paling bawah tidak tertutup Bottom Nav */}
+      <div className="h-32 w-full shrink-0 pointer-events-none" aria-hidden="true" />
+
       {/* Modal Edit User / Override Password Bawahan */}
       {editingUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
