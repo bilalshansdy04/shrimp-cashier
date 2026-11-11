@@ -4,8 +4,6 @@ import { getSessionUser } from "@/lib/auth";
 import { eq, desc, sql } from "drizzle-orm";
 import { Product, StoreSettings, Cashier, UserRole } from "@/types";
 
-export const dynamic = "force-dynamic";
-
 export async function GET(req: Request) {
   try {
     const currentUser = await getSessionUser(req);

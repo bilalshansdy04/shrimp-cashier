@@ -44,6 +44,10 @@ export default function Home() {
   const fetchState = useCallback(async () => {
     try {
       const res = await fetch("/api/pos/state");
+      if (!res.ok) {
+        console.error("API /api/pos/state returned status", res.status);
+        return;
+      }
       const json = await res.json();
       if (json.success) {
         setSettings(json.data.settings);
