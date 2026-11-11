@@ -30,38 +30,25 @@ export const USERS = {
 
 /**
  * Melakukan proses login dengan kredensial tertentu.
- * Jika sudah ada sesi aktif, akan melakukan logout terlebih dahulu.
+ * Selalu membersihkan cookies sesi terlebih dahulu agar dimulai dari halaman login bersih.
  */
 export async function loginAs(page: Page, user: TestUserCredentials) {
+  // Bersihkan cookies browser agar selalu mulai dari login modal
+  await page.context().clearCookies();
   await page.goto("/");
 
   const loginBtn = page.getByRole("button", { name: "Masuk ke Sistem Kasir" });
+  await expect(loginBtn).toBeVisible({ timeout: 20000 });
+
+  // Isi form login
+  await page.getByPlaceholder("cth: spradmcsr atau kasir_pagi").fill(user.username);
+  await page.getByPlaceholder("Masukkan password akun").fill(user.password);
+
+  // Klik tombol login
+  await loginBtn.click();
+
+  // Pastikan berhasil masuk ke dashboard kasir
   const kasirHeader = page.getByText("Kasir Online");
-
-  // Tunggu layar selesai loading
-  await expect(loginBtn.or(kasirHeader)).toBeVisible({ timeout: 20000 });
-
-  // Jika sudah terlanjur login dengan user lain, lakukan logout dulu
-  if (await kasirHeader.isVisible()) {
-    const userPill = page.locator('button[title*="Logout / Ganti Akun"], button[title*="Logout"]');
-    if (await userPill.isVisible()) {
-      await userPill.first().click();
-      const yaLogoutBtn = page.getByRole("button", { name: "Ya, Logout" });
-      if (await yaLogoutBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await yaLogoutBtn.click();
-        await expect(loginBtn).toBeVisible({ timeout: 10000 });
-      }
-    }
-  }
-
-  // Isi formulir login
-  if (await loginBtn.isVisible()) {
-    await page.getByPlaceholder("cth: spradmcsr atau kasir_pagi").fill(user.username);
-    await page.getByPlaceholder("Masukkan password akun").fill(user.password);
-    await loginBtn.click();
-  }
-
-  // Pastikan berhasil masuk ke dashboard
   await expect(kasirHeader).toBeVisible({ timeout: 15000 });
 }
 

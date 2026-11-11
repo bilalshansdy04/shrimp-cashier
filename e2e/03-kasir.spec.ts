@@ -8,8 +8,8 @@ test.describe("Skenario 3: Kasir (clrkcsr) - Operasional POS & Restriksi Hak Aks
 
   test("3.1. Verifikasi Identitas & Pembatasan Menu (Security RBAC)", async ({ page }) => {
     // Profil header menunjukkan nama Kasir
-    await expect(page.getByText("Siti Rahma (Shift Pagi)")).toBeVisible();
-    await expect(page.getByText("KASIR", { exact: true })).toBeVisible();
+    await expect(page.getByText("Siti Rahma (Shift Pagi)").first()).toBeVisible();
+    await expect(page.getByText("Kasir", { exact: true }).first()).toBeVisible();
 
     // Navigasi Bawah: Menu "Produk" dan "Atur" WAJIB DISEMBUNYIKAN untuk Kasir
     const nav = page.locator("nav");
@@ -24,82 +24,72 @@ test.describe("Skenario 3: Kasir (clrkcsr) - Operasional POS & Restriksi Hak Aks
   });
 
   test("3.2. Alur Transaksi Penjualan POS Kasir Lengkap", async ({ page }) => {
-    // 1. Pastikan berada di halaman POS (Kasir)
+    // 1. Pastikan berada di tab Kasir
     await page.locator("nav").getByText("Kasir").click();
 
-    // 2. Klik salah satu produk yang tersedia di katalog (misal: Kopi Susu Gula Aren)
-    const productCard = page.locator('div:has-text("Kopi Susu Gula Aren")').first();
-    await expect(productCard).toBeVisible();
+    // 2. Klik salah satu produk di katalog (tombol kartu produk)
+    const productBtn = page.getByRole("button", { name: /Kopi Susu Gula Aren/i }).first();
+    await expect(productBtn).toBeVisible();
+    await productBtn.click();
 
-    // Klik tombol tambah ke keranjang (+ atau kartu produk)
-    const addBtn = productCard.locator('button').first();
-    await addBtn.click();
-
-    // Jika ada modal pilihan varian, pilih varian pertama
-    const modalVarian = page.getByText("Pilih Varian");
+    // 3. Jika muncul modal varian produk, pilih varian pertama
+    const modalVarian = page.locator("div.fixed").filter({ hasText: "Pilih Varian" });
     if (await modalVarian.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await page.locator('button:has-text("Tambah ke Keranjang")').first().click();
+      await modalVarian.locator("button").nth(1).click();
     }
 
-    // 3. Verifikasi item masuk ke panel pesanan keranjang
-    await expect(page.getByText("Kopi Susu Gula Aren").first()).toBeVisible();
+    // 4. Verifikasi keranjang pesanan bertambah
+    await expect(page.getByText(/Kopi Susu Gula Aren/i).first()).toBeVisible();
 
-    // 4. Buka Modal Pembayaran (Klik tombol Bayar Sekarang)
+    // 5. Buka Modal Pembayaran (Klik tombol Bayar Sekarang)
     const payBtn = page.getByRole("button", { name: /Bayar Sekarang/i });
     await expect(payBtn).toBeEnabled();
     await payBtn.click();
 
-    // 5. Verifikasi Modal Pembayaran Terbuka
-    await expect(page.getByText("Pembayaran")).toBeVisible();
+    // 6. Verifikasi Modal Pembayaran Terbuka
+    const modalPayment = page.locator("div.fixed").filter({ hasText: "Pembayaran" });
+    await expect(modalPayment).toBeVisible();
 
-    // Masukkan uang tunai pas atau nominal cepat
-    const nominalPasBtn = page.locator('button:has-text("Uang Pas")');
-    if (await nominalPasBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await nominalPasBtn.click();
-    } else {
-      // Isi manual nominal pembayaran
-      const inputBayar = page.locator('input[type="number"], input[placeholder*="bayar" i]').first();
-      await inputBayar.fill("50000");
-    }
+    // Pilih Uang Pas
+    const nominalPasBtn = modalPayment.getByRole("button", { name: /Uang Pas/i });
+    await nominalPasBtn.click();
 
-    // 6. Konfirmasi Proses Transaksi
-    const submitPayBtn = page.getByRole("button", { name: /Selesaikan Pembayaran|Proses Transaksi|Simpan & Cetak/i }).first();
-    await submitPayBtn.click();
+    // Selesaikan transaksi
+    const submitBtn = modalPayment.getByRole("button", { name: /Selesaikan/i }).first();
+    await submitBtn.click();
 
     // 7. Modal Sukses Transaksi Muncul
-    await expect(page.getByText(/Transaksi Berhasil|Pembayaran Sukses/i)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText("Transaksi Berhasil!")).toBeVisible({ timeout: 10000 });
 
-    // Tutup modal transaksi baru
-    const newTrxBtn = page.getByRole("button", { name: /Transaksi Baru|Tutup/i }).first();
-    if (await newTrxBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await newTrxBtn.click();
-    }
+    // Klik Transaksi Baru untuk menutup modal
+    const newTrxBtn = page.getByRole("button", { name: /Transaksi Baru/i });
+    await newTrxBtn.click();
+    await expect(page.getByText("Transaksi Berhasil!")).not.toBeVisible();
   });
 
   test("3.3. Peringatan Keranjang Aktif saat Mencoba Logout", async ({ page }) => {
-    // Tambah item ke keranjang
-    const productCard = page.locator('div:has-text("Americano Ice")').first();
-    if (await productCard.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await productCard.click();
-      const addVariantBtn = page.locator('button:has-text("Tambah ke Keranjang")');
-      if (await addVariantBtn.isVisible({ timeout: 1500 }).catch(() => false)) {
-        await addVariantBtn.click();
+    // 1. Tambah item ke keranjang
+    const productBtn = page.getByRole("button", { name: /Americano Ice/i }).first();
+    if (await productBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await productBtn.click();
+      const modalVarian = page.locator("div.fixed").filter({ hasText: "Pilih Varian" });
+      if (await modalVarian.isVisible({ timeout: 1500 }).catch(() => false)) {
+        await modalVarian.locator("button").nth(1).click();
       }
     }
 
-    // Klik tombol Logout saat masih ada item di keranjang
+    // 2. Klik tombol Logout di navigation dock saat masih ada keranjang
     const logoutBtn = page.locator('nav button[title*="Logout"]');
     await logoutBtn.click();
 
-    // Modal Konfirmasi Logout wajib menampilkan peringatan keranjang
-    const modalConfirm = page.getByText("Konfirmasi Logout");
+    // 3. Modal Konfirmasi Logout wajib menampilkan peringatan keranjang
+    const modalConfirm = page.locator("div.fixed").filter({ hasText: "Konfirmasi Logout" });
     await expect(modalConfirm).toBeVisible();
 
-    // Cek ada pesan peringatan keranjang
-    await expect(page.getByText(/item di keranjang yang belum selesai dibayar/i)).toBeVisible();
+    await expect(modalConfirm.getByText(/item di keranjang yang belum selesai dibayar/i)).toBeVisible();
 
-    // Klik Batal agar kasir dapat menyelesaikan pesanannya
-    const batalBtn = page.getByRole("button", { name: "Batal" });
+    // 4. Klik Batal
+    const batalBtn = modalConfirm.getByRole("button", { name: "Batal" });
     await batalBtn.click();
     await expect(modalConfirm).not.toBeVisible();
   });
