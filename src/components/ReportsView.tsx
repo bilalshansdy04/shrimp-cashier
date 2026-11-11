@@ -47,7 +47,7 @@ export function ReportsView() {
   }, [report]);
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-y-auto p-4 lg:p-8 pb-28 space-y-6">
+    <div className="flex-1 flex flex-col h-full overflow-y-auto p-4 lg:p-8 pb-40 sm:pb-44 space-y-6">
       {/* Header and Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

@@ -249,7 +249,7 @@ export function POSView({
         </div>
 
         {/* Product Cards Grid */}
-        <div className="flex-1 overflow-y-auto px-4 lg:px-8 pb-32 pt-2">
+        <div className="flex-1 overflow-y-auto px-4 lg:px-8 pb-40 pt-2">
           {filteredProducts.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 text-center">
               <div className="w-16 h-16 rounded-3xl bg-muted/60 flex items-center justify-center text-muted-foreground mb-3">
@@ -480,7 +480,7 @@ export function POSView({
         </div>
 
         {/* Calculations and Checkout CTA */}
-        <div className="p-5 pb-28 lg:pb-24 space-y-3 bg-muted/20">
+        <div className="p-5 pb-36 lg:pb-32 space-y-3 bg-muted/20">
           {/* Discount Field */}
           <div className="p-3 rounded-2xl bg-card shadow-xs space-y-2">
             <div className="flex items-center justify-between text-xs">
@@ -574,7 +574,7 @@ export function POSView({
 
       {/* Floating Action Cart Bubble for Mobile */}
       {cart.length > 0 && (
-        <div className="lg:hidden fixed bottom-20 left-4 right-4 z-40 animate-pop-in">
+        <div className="lg:hidden fixed bottom-22 sm:bottom-24 left-4 right-4 z-40 animate-pop-in">
           <button
             type="button"
             onClick={() => setIsMobileCartOpen(true)}

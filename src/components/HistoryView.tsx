@@ -124,7 +124,7 @@ export function HistoryView({
   const isAdmin = currentCashier.peran === "admin";
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden p-4 lg:p-8 pb-28">
+    <div className="flex-1 flex flex-col h-full overflow-hidden p-4 lg:p-8 pb-36">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
@@ -184,7 +184,7 @@ export function HistoryView({
       </div>
 
       {/* Transaction Cards List (No outlines) */}
-      <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+      <div className="flex-1 overflow-y-auto space-y-3 pr-1 pb-36 sm:pb-40">
         {isLoading ? (
           <div className="flex items-center justify-center h-48 text-muted-foreground text-xs">
             Memuat riwayat transaksi...

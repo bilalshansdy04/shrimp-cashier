@@ -534,7 +534,7 @@ export function SettingsView({
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-y-auto p-4 lg:p-8 pb-28 space-y-8">
+    <div className="flex-1 flex flex-col h-full overflow-y-auto p-4 lg:p-8 pb-40 sm:pb-44 space-y-8">
       <div>
         <h2 className="text-2xl font-black text-foreground tracking-tight">
           Pengaturan &amp; Data

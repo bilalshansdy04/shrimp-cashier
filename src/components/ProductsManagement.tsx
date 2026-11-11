@@ -224,7 +224,7 @@ export function ProductsManagement({
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden p-4 lg:p-8 pb-28">
+    <div className="flex-1 flex flex-col h-full overflow-hidden p-4 lg:p-8 pb-36">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
@@ -310,7 +310,7 @@ export function ProductsManagement({
       </div>
 
       {/* Products Grid / Cards (Clean borderless surface ladder) */}
-      <div className="flex-1 overflow-y-auto space-y-2.5 pr-1">
+      <div className="flex-1 overflow-y-auto space-y-2.5 pr-1 pb-36 sm:pb-40">
         {filteredProducts.length === 0 ? (
           <div className="p-12 text-center text-muted-foreground bg-card rounded-3xl shadow-xs">
             <p className="font-bold text-sm text-foreground">Tidak ada produk ditemukan</p>
