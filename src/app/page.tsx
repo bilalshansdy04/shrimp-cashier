@@ -11,6 +11,7 @@ import { ReportsView } from "@/components/ReportsView";
 import { SettingsView } from "@/components/SettingsView";
 import { LoginModal } from "@/components/LoginModal";
 import { PaymentModal } from "@/components/PaymentModal";
+import { LogoutConfirmModal } from "@/components/LogoutConfirmModal";
 import { SuccessReceiptModal } from "@/components/SuccessReceiptModal";
 import { ThermalReceipt } from "@/components/ThermalReceipt";
 import { playCashChime, playBeep } from "@/lib/audio";
@@ -38,6 +39,7 @@ export default function Home() {
 
   // Modals
   const [isPaymentOpen, setIsPaymentOpen] = useState<boolean>(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState<boolean>(false);
   const [completedTransaction, setCompletedTransaction] = useState<Transaction | null>(null);
   const [receiptToPrint, setReceiptToPrint] = useState<Transaction | null>(null);
 
@@ -199,7 +201,7 @@ export default function Home() {
       <TopHeader
         settings={settings}
         currentCashier={currentCashier}
-        onLock={handleLogout}
+        onLock={() => setIsLogoutModalOpen(true)}
       />
 
       {/* Main View Area */}
@@ -256,8 +258,21 @@ export default function Home() {
         }}
         currentCashier={currentCashier}
         cartCount={cart.reduce((sum, item) => sum + item.qty, 0)}
-        onLock={handleLogout}
+        onLock={() => setIsLogoutModalOpen(true)}
       />
+
+      {/* Logout Confirmation Modal */}
+      {isLogoutModalOpen && currentCashier && (
+        <LogoutConfirmModal
+          currentCashier={currentCashier}
+          cartCount={cart.reduce((sum, item) => sum + item.qty, 0)}
+          onClose={() => setIsLogoutModalOpen(false)}
+          onConfirm={async () => {
+            setIsLogoutModalOpen(false);
+            await handleLogout();
+          }}
+        />
+      )}
 
       {/* Payment Modal */}
       {isPaymentOpen && (
