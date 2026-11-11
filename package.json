@@ -11,7 +11,11 @@
     "db:push": "drizzle-kit push",
     "db:seed:dev": "tsx src/db/seed-dev.ts",
     "db:seed:prod": "tsx src/db/seed-prod.ts",
-    "admin:reset": "tsx src/db/reset-superadmin.ts"
+    "admin:reset": "tsx src/db/reset-superadmin.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:report": "playwright show-report"
   },
   "dependencies": {
     "@libsql/client": "^0.18.0",
@@ -26,6 +30,7 @@
     "tailwind-merge": "^3.7.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.0",
     "@tailwindcss/turbopack": "4.3.3",
     "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^20.19.43",
