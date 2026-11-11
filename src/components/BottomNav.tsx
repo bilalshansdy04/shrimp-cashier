@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Cashier } from "@/types";
 import { playBeep } from "@/lib/audio";
 import {
@@ -9,7 +9,9 @@ import {
   History,
   BarChart3,
   Settings,
-  Lock,
+  LogOut,
+  AlertTriangle,
+  X,
 } from "lucide-react";
 
 interface BottomNavProps {
@@ -27,6 +29,7 @@ export function BottomNav({
   cartCount,
   onLock,
 }: BottomNavProps) {
+  const [isConfirmOpen, setIsConfirmOpen] = useState<boolean>(false);
   const isAdmin = currentCashier.role !== "clrkcsr" && currentCashier.peran !== "kasir";
 
   const tabs = [
@@ -84,23 +87,96 @@ export function BottomNav({
           );
         })}
 
-        {/* Lock / switch cashier button */}
+        {/* Logout Button with interactive confirmation */}
         <div className="w-[1px] h-6 bg-muted mx-1 shrink-0" />
         <button
           type="button"
           onClick={() => {
             playBeep();
-            onLock();
+            setIsConfirmOpen(true);
           }}
-          title={`Kasir: ${currentCashier.nama} (Klik untuk ganti)`}
-          className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-2.5 px-2.5 rounded-2xl text-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer shrink-0 font-black"
+          title={`Logout (${currentCashier.nama})`}
+          className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-2.5 px-3 rounded-2xl text-red-500/90 hover:text-red-600 hover:bg-red-500/10 active:scale-95 transition-all cursor-pointer shrink-0 font-black"
         >
-          <Lock className="w-4 h-4 sm:w-4.5 sm:h-4.5 stroke-[2.4]" />
-          <span className="text-[11px] sm:text-xs font-extrabold max-w-[70px] truncate">
-            {currentCashier.nama}
+          <LogOut className="w-4 h-4 sm:w-4.5 sm:h-4.5 stroke-[2.4]" />
+          <span className="text-[11px] sm:text-xs font-black tracking-tight">
+            Logout
           </span>
         </button>
       </nav>
+
+      {/* Interactive Logout Validation Modal */}
+      {isConfirmOpen && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-pop-in">
+          <div className="w-full max-w-sm bg-card rounded-3xl p-6 shadow-2xl animate-pop-in space-y-4 text-center">
+            <div className="w-14 h-14 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center mx-auto shadow-xs">
+              <LogOut className="w-7 h-7 stroke-[2.2]" />
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="font-black text-lg text-foreground">
+                Konfirmasi Logout
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Apakah Anda yakin ingin keluar dari sesi akun ini?
+              </p>
+            </div>
+
+            {/* Account Info Badge */}
+            <div className="p-3 rounded-2xl bg-muted/40 flex items-center justify-between text-xs">
+              <div className="text-left">
+                <span className="font-extrabold text-foreground block truncate max-w-[170px]">
+                  {currentCashier.nama}
+                </span>
+                <span className="text-[10px] font-mono text-muted-foreground">
+                  @{currentCashier.username || "user"}
+                </span>
+              </div>
+              <span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary font-black text-[10px] uppercase">
+                {currentCashier.role === "spradmcsr"
+                  ? "Super Admin"
+                  : currentCashier.role === "admmngrcsr"
+                  ? "Admin Toko"
+                  : "Kasir"}
+              </span>
+            </div>
+
+            {/* Warning if cart has items */}
+            {cartCount > 0 && (
+              <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs font-bold flex items-center gap-2 text-left">
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+                <span>Perhatian: Masih ada {cartCount} item di keranjang yang belum selesai dibayar.</span>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  playBeep();
+                  setIsConfirmOpen(false);
+                }}
+                className="flex-1 py-3 rounded-full bg-muted/60 text-xs font-bold text-foreground hover:bg-muted transition-colors cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  playBeep();
+                  setIsConfirmOpen(false);
+                  onLock();
+                }}
+                className="flex-1 py-3 rounded-full bg-red-500 text-white text-xs font-black hover:bg-red-600 active:scale-98 shadow-md shadow-red-500/20 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Ya, Logout</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
