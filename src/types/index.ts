@@ -19,11 +19,33 @@ export interface StoreSettings {
   updated_at?: string;
 }
 
+export type UserRole = "spradmcsr" | "admmngrcsr" | "clrkcsr";
+
+export const ROLE_LABELS: Record<UserRole, string> = {
+  spradmcsr: "Super Admin",
+  admmngrcsr: "Admin Toko",
+  clrkcsr: "Kasir",
+};
+
+export interface AppUser {
+  id: string;
+  username: string;
+  namaLengkap: string;
+  role: UserRole;
+  isActive: boolean;
+  createdBy?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Alias Cashier for backward compatibility in components
 export interface Cashier {
   id: string;
   nama: string;
-  pin: string;
-  peran: "admin" | "kasir";
+  username?: string;
+  role?: UserRole;
+  peran?: "admin" | "kasir";
+  pin?: string;
   created_at?: string;
 }
 

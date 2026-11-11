@@ -84,7 +84,11 @@ export function TopHeader({ settings, currentCashier, onLock }: TopHeaderProps) 
           </div>
           <span className="truncate max-w-[100px]">{currentCashier.nama}</span>
           <span className="text-[10px] uppercase font-bold text-muted-foreground hidden sm:inline-block">
-            {currentCashier.peran}
+            {currentCashier.role === "spradmcsr"
+              ? "Super Admin"
+              : currentCashier.role === "admmngrcsr"
+              ? "Admin"
+              : "Kasir"}
           </span>
         </button>
 

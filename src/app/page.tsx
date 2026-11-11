@@ -9,7 +9,7 @@ import { ProductsManagement } from "@/components/ProductsManagement";
 import { HistoryView } from "@/components/HistoryView";
 import { ReportsView } from "@/components/ReportsView";
 import { SettingsView } from "@/components/SettingsView";
-import { PinLoginModal } from "@/components/PinLoginModal";
+import { LoginModal } from "@/components/LoginModal";
 import { PaymentModal } from "@/components/PaymentModal";
 import { SuccessReceiptModal } from "@/components/SuccessReceiptModal";
 import { ThermalReceipt } from "@/components/ThermalReceipt";
@@ -59,10 +59,15 @@ export default function Home() {
           );
         }
 
-        const savedCashierId = sessionStorage.getItem("shrimpcashier_session");
-        if (savedCashierId) {
-          const found = json.data.cashiers.find((c: Cashier) => c.id === savedCashierId);
-          if (found) setCurrentCashier(found);
+        if (json.data.currentUser) {
+          const u = json.data.currentUser;
+          setCurrentCashier({
+            id: u.id,
+            nama: u.namaLengkap,
+            username: u.username,
+            role: u.role,
+            peran: u.role === "clrkcsr" ? "kasir" : "admin",
+          });
         }
       }
     } catch (e) {
@@ -78,20 +83,24 @@ export default function Home() {
     fetchState();
   }, [fetchState]);
 
-  const handleLoginSuccess = (cashier: Cashier) => {
-    setCurrentCashier(cashier);
-    try {
-      sessionStorage.setItem("shrimpcashier_session", cashier.id);
-    } catch (e) {}
+  const handleLoginSuccess = (user: any) => {
+    setCurrentCashier({
+      id: user.id,
+      nama: user.namaLengkap,
+      username: user.username,
+      role: user.role,
+      peran: user.role === "clrkcsr" ? "kasir" : "admin",
+    });
+    fetchState();
     playBeep();
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch (e) {}
     setCurrentCashier(null);
     setCart([]);
-    try {
-      sessionStorage.removeItem("shrimpcashier_session");
-    } catch (e) {}
   };
 
   const handleOpenPayment = () => {
@@ -170,13 +179,12 @@ export default function Home() {
     );
   }
 
-  // PIN Login Modal
+  // Login Screen (Username & Password)
   if (!currentCashier) {
     return (
-      <PinLoginModal
-        cashiers={cashiers}
+      <LoginModal
         settings={settings}
-        onSuccess={handleLoginSuccess}
+        onLoginSuccess={handleLoginSuccess}
       />
     );
   }
@@ -235,8 +243,8 @@ export default function Home() {
         activeTab={activeTab}
         onTabChange={(tab) => {
           if (tab === "produk" || tab === "atur") {
-            if (currentCashier.peran !== "admin") {
-              alert("Menu ini hanya dapat diakses oleh Admin.");
+            if (currentCashier.role === "clrkcsr") {
+              alert("Menu ini hanya dapat diakses oleh Admin atau Super Admin.");
               return;
             }
           }

@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
-import { StoreSettings, Cashier, ColorPalette } from "@/types";
+import React, { useState, useEffect } from "react";
+import { StoreSettings, Cashier, ColorPalette, AppUser, UserRole, ROLE_LABELS } from "@/types";
 import { downloadFile, formatDateKey, parseCSV, escapeCSVCell } from "@/lib/format";
-import { playBeep } from "@/lib/audio";
+import { playBeep, playErrorBuzz } from "@/lib/audio";
 import { DEFAULT_PALETTES, applyPalette } from "@/lib/theme";
 import {
   Store,
@@ -20,6 +20,13 @@ import {
   Palette,
   Check,
   Sparkles,
+  Key,
+  Lock,
+  Edit3,
+  X,
+  Eye,
+  EyeOff,
+  ShieldAlert,
 } from "lucide-react";
 
 interface SettingsViewProps {
@@ -43,10 +50,190 @@ export function SettingsView({
   const [isSavingStore, setIsSavingStore] = useState<boolean>(false);
   const [storeSavedMsg, setStoreSavedMsg] = useState<string>("");
 
-  const [newCashierName, setNewCashierName] = useState<string>("");
-  const [newCashierPin, setNewCashierPin] = useState<string>("");
-  const [newCashierRole, setNewCashierRole] = useState<"admin" | "kasir">("kasir");
-  const [isAddingCashier, setIsAddingCashier] = useState<boolean>(false);
+  // RBAC User Management States
+  const isSuperAdmin = currentCashier.role === "spradmcsr";
+  const isAdmin = currentCashier.role === "admmngrcsr";
+  const [usersList, setUsersList] = useState<AppUser[]>([]);
+  const [isUsersLoading, setIsUsersLoading] = useState<boolean>(false);
+  const [userRoleFilter, setUserRoleFilter] = useState<string>("all");
+
+  // Form Tambah User
+  const [newUsername, setNewUsername] = useState<string>("");
+  const [newNamaLengkap, setNewNamaLengkap] = useState<string>("");
+  const [newPassword, setNewPassword] = useState<string>("");
+  const [newRole, setNewRole] = useState<UserRole>("clrkcsr");
+  const [isAddingUser, setIsAddingUser] = useState<boolean>(false);
+
+  // Modal Edit User / Override Password
+  const [editingUser, setEditingUser] = useState<AppUser | null>(null);
+  const [editNamaLengkap, setEditNamaLengkap] = useState<string>("");
+  const [editNewPassword, setEditNewPassword] = useState<string>("");
+  const [editIsActive, setEditIsActive] = useState<boolean>(true);
+  const [isSavingEditUser, setIsSavingEditUser] = useState<boolean>(false);
+
+  // Keamanan Akun Sendiri (Change Password / Username)
+  const [selfUsername, setSelfUsername] = useState<string>(currentCashier.username || "");
+  const [selfOldPassword, setSelfOldPassword] = useState<string>("");
+  const [selfNewPassword, setSelfNewPassword] = useState<string>("");
+  const [isSavingSecurity, setIsSavingSecurity] = useState<boolean>(false);
+  const [securityMsg, setSecurityMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  const fetchUsers = async () => {
+    try {
+      setIsUsersLoading(true);
+      const res = await fetch("/api/users");
+      const json = await res.json();
+      if (json.success) {
+        setUsersList(json.data);
+      }
+    } catch (e) {
+      console.error("Gagal mengambil data user:", e);
+    } finally {
+      setIsUsersLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const handleAddUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newUsername.trim() || !newNamaLengkap.trim() || newPassword.length < 6) {
+      alert("Username, Nama, dan Password (minimal 6 karakter) wajib diisi.");
+      return;
+    }
+
+    try {
+      setIsAddingUser(true);
+      const res = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: newUsername.trim(),
+          namaLengkap: newNamaLengkap.trim(),
+          password: newPassword,
+          role: newRole,
+        }),
+      });
+
+      const json = await res.json();
+      if (!json.success) throw new Error(json.message);
+
+      playBeep();
+      setNewUsername("");
+      setNewNamaLengkap("");
+      setNewPassword("");
+      setNewRole("clrkcsr");
+      fetchUsers();
+      onRefreshAll();
+    } catch (err: any) {
+      playErrorBuzz();
+      alert(err.message || "Gagal menambahkan pengguna.");
+    } finally {
+      setIsAddingUser(false);
+    }
+  };
+
+  const handleOpenEditUser = (user: AppUser) => {
+    setEditingUser(user);
+    setEditNamaLengkap(user.namaLengkap);
+    setEditNewPassword("");
+    setEditIsActive(user.isActive);
+  };
+
+  const handleSaveEditUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUser) return;
+
+    try {
+      setIsSavingEditUser(true);
+      const body: any = {
+        id: editingUser.id,
+        namaLengkap: editNamaLengkap.trim(),
+        isActive: editIsActive,
+      };
+      if (editNewPassword.trim()) {
+        body.password = editNewPassword.trim();
+      }
+
+      const res = await fetch("/api/users", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      const json = await res.json();
+      if (!json.success) throw new Error(json.message);
+
+      playBeep();
+      setEditingUser(null);
+      fetchUsers();
+      onRefreshAll();
+    } catch (err: any) {
+      playErrorBuzz();
+      alert(err.message || "Gagal memperbarui pengguna.");
+    } finally {
+      setIsSavingEditUser(false);
+    }
+  };
+
+  const handleDeleteUser = async (id: string, name: string) => {
+    if (!confirm(`Hapus akun pengguna "${name}"? Tindakan ini tidak dapat dibatalkan.`)) return;
+
+    try {
+      const res = await fetch(`/api/users?id=${id}`, { method: "DELETE" });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.message);
+
+      playBeep();
+      fetchUsers();
+      onRefreshAll();
+    } catch (err: any) {
+      playErrorBuzz();
+      alert(err.message || "Gagal menghapus pengguna.");
+    }
+  };
+
+  const handleUpdateSelfSecurity = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setIsSavingSecurity(true);
+      setSecurityMsg(null);
+
+      const body: any = {};
+      if (isSuperAdmin && selfUsername.trim() !== currentCashier.username) {
+        body.new_username = selfUsername.trim();
+      }
+      if (selfNewPassword) {
+        body.new_password = selfNewPassword;
+      }
+      if (!isSuperAdmin && selfNewPassword) {
+        body.old_password = selfOldPassword;
+      }
+
+      const res = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      const json = await res.json();
+      if (!json.success) throw new Error(json.message);
+
+      playBeep();
+      setSecurityMsg({ type: "success", text: json.message });
+      setSelfOldPassword("");
+      setSelfNewPassword("");
+      setTimeout(() => setSecurityMsg(null), 4000);
+      onRefreshAll();
+    } catch (err: any) {
+      playErrorBuzz();
+      setSecurityMsg({ type: "error", text: err.message || "Gagal memperbarui profil akun." });
+    } finally {
+      setIsSavingSecurity(false);
+    }
+  };
 
   // Palette & Color States
   const [activePrimary, setActivePrimary] = useState<string>(settings.theme_primary || "#f97316");
@@ -205,54 +392,6 @@ export function SettingsView({
       alert(err.message || "Gagal menyimpan pengaturan");
     } finally {
       setIsSavingStore(false);
-    }
-  };
-
-  const handleAddCashier = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newCashierName.trim() || newCashierPin.length < 4) {
-      alert("Nama dan PIN minimal 4 angka wajib diisi");
-      return;
-    }
-
-    try {
-      setIsAddingCashier(true);
-      const res = await fetch("/api/cashiers", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nama: newCashierName.trim(),
-          pin: newCashierPin,
-          peran: newCashierRole,
-        }),
-      });
-      const json = await res.json();
-      if (!json.success) throw new Error(json.message);
-
-      playBeep();
-      setNewCashierName("");
-      setNewCashierPin("");
-      setNewCashierRole("kasir");
-      onRefreshAll();
-    } catch (err: any) {
-      alert(err.message || "Gagal menambahkan kasir");
-    } finally {
-      setIsAddingCashier(false);
-    }
-  };
-
-  const handleDeleteCashier = async (id: string, name: string) => {
-    if (!confirm(`Hapus akun kasir "${name}"?`)) return;
-
-    try {
-      const res = await fetch(`/api/cashiers?id=${id}`, { method: "DELETE" });
-      const json = await res.json();
-      if (!json.success) throw new Error(json.message);
-
-      playBeep();
-      onRefreshAll();
-    } catch (err: any) {
-      alert(err.message || "Gagal menghapus kasir");
     }
   };
 
@@ -723,108 +862,280 @@ export function SettingsView({
           </form>
         </div>
 
-        {/* Cashier Accounts Management */}
+        {/* RBAC User Management Section */}
         <div className="p-6 rounded-3xl bg-card shadow-xs space-y-4">
-          <div className="flex items-center gap-2 pb-2">
-            <Users className="w-5 h-5 text-primary" />
-            <div>
-              <h3 className="font-black text-base text-foreground">Multi-Kasir &amp; PIN</h3>
-              <p className="text-xs text-muted-foreground">Admin akses penuh; Kasir hanya penjualan</p>
+          <div className="flex items-center justify-between pb-1">
+            <div className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-primary" />
+              <div>
+                <h3 className="font-black text-base text-foreground">Manajemen Pengguna &amp; Tim</h3>
+                <p className="text-xs text-muted-foreground">
+                  {isSuperAdmin
+                    ? "Super Admin: Akses penuh kelola Admin & Kasir"
+                    : "Admin Toko: Kelola akun Kasir"}
+                </p>
+              </div>
+            </div>
+
+            {/* Role Filter Pills */}
+            <div className="flex gap-1 text-[11px] font-bold">
+              {["all", "admmngrcsr", "clrkcsr"].map((f) => (
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() => setUserRoleFilter(f)}
+                  className={`px-2.5 py-1 rounded-full cursor-pointer transition-colors ${
+                    userRoleFilter === f
+                      ? "bg-primary text-white shadow-2xs"
+                      : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  {f === "all" ? "Semua" : f === "admmngrcsr" ? "Admin" : "Kasir"}
+                </button>
+              ))}
             </div>
           </div>
 
-          <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
-            {cashiers.map((c) => {
-              const isCurrent = c.id === currentCashier.id;
-              const isAdmin = c.peran === "admin";
+          {/* User List */}
+          <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+            {usersList
+              .filter((u) => userRoleFilter === "all" || u.role === userRoleFilter)
+              .map((u) => {
+                const isCurrent = u.id === currentCashier.id;
+                const isUserSuperAdmin = u.role === "spradmcsr";
+                const isUserAdmin = u.role === "admmngrcsr";
+                const canManage =
+                  !isCurrent &&
+                  ((isSuperAdmin && !isUserSuperAdmin) ||
+                    (isAdmin && u.role === "clrkcsr"));
 
-              return (
-                <div
-                  key={c.id}
-                  className="flex items-center justify-between p-3.5 rounded-2xl bg-muted/40"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
-                      {c.nama.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <span className="font-bold text-sm text-foreground block">
-                        {c.nama}{" "}
-                        {isCurrent && (
-                          <span className="text-[10px] text-primary font-semibold">
-                            (Sedang Masuk)
+                return (
+                  <div
+                    key={u.id}
+                    className="flex items-center justify-between p-3.5 rounded-2xl bg-muted/40 hover:bg-muted/60 transition-colors"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs text-white ${
+                          isUserSuperAdmin
+                            ? "bg-purple-600"
+                            : isUserAdmin
+                            ? "bg-blue-600"
+                            : "bg-emerald-600"
+                        }`}
+                      >
+                        {u.namaLengkap.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-extrabold text-sm text-foreground block">
+                            {u.namaLengkap}
                           </span>
-                        )}
-                      </span>
-                      <span className="text-[10px] uppercase font-semibold text-muted-foreground flex items-center gap-1">
-                        {isAdmin ? (
-                          <ShieldCheck className="w-3 h-3 text-emerald-500" />
-                        ) : (
-                          <User className="w-3 h-3" />
-                        )}
-                        {c.peran} · PIN: {c.pin}
-                      </span>
+                          {isCurrent && (
+                            <span className="px-1.5 py-0.2 rounded-full bg-primary/10 text-primary text-[10px] font-bold">
+                              Anda
+                            </span>
+                          )}
+                          {!u.isActive && (
+                            <span className="px-1.5 py-0.2 rounded-full bg-red-500/10 text-red-500 text-[10px] font-bold">
+                              Nonaktif
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1 mt-0.5">
+                          <span className="font-mono text-foreground font-bold">@{u.username}</span>
+                          <span>·</span>
+                          <span
+                            className={`font-bold ${
+                              isUserSuperAdmin
+                                ? "text-purple-600 dark:text-purple-400"
+                                : isUserAdmin
+                                ? "text-blue-600 dark:text-blue-400"
+                                : "text-emerald-600 dark:text-emerald-400"
+                            }`}
+                          >
+                            {ROLE_LABELS[u.role] || u.role}
+                          </span>
+                        </span>
+                      </div>
                     </div>
-                  </div>
 
-                  {!isCurrent && (
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteCashier(c.id, c.nama)}
-                      className="p-1.5 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg cursor-pointer transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-              );
-            })}
+                    {canManage && (
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditUser(u)}
+                          title="Edit & Reset Password"
+                          className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl cursor-pointer transition-colors"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteUser(u.id, u.namaLengkap)}
+                          title="Hapus akun ini"
+                          className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-xl cursor-pointer transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
           </div>
 
-          <form onSubmit={handleAddCashier} className="pt-2 space-y-3">
-            <span className="text-xs font-bold text-foreground block">Tambah Kasir Baru</span>
+          {/* Form Tambah Pengguna Baru */}
+          <form onSubmit={handleAddUser} className="pt-2 space-y-3 border-t border-muted/50">
+            <span className="text-xs font-bold text-foreground block">Tambah Pengguna Baru</span>
 
             <div className="grid grid-cols-2 gap-2">
               <input
                 type="text"
-                placeholder="Nama kasir"
+                placeholder="Username (cth: kasir_ani)"
                 required
-                value={newCashierName}
-                onChange={(e) => setNewCashierName(e.target.value)}
-                className="px-3.5 py-2 text-xs rounded-xl bg-muted/40 focus:outline-none focus:ring-1 focus:ring-primary text-foreground"
-              />
-              <input
-                type="password"
-                maxLength={6}
-                placeholder="PIN (4-6 angka)"
-                required
-                value={newCashierPin}
-                onChange={(e) => setNewCashierPin(e.target.value.replace(/\D/g, ""))}
+                value={newUsername}
+                onChange={(e) => setNewUsername(e.target.value.toLowerCase())}
                 className="px-3.5 py-2 text-xs rounded-xl bg-muted/40 focus:outline-none focus:ring-1 focus:ring-primary text-foreground font-mono"
               />
+              <input
+                type="text"
+                placeholder="Nama Lengkap"
+                required
+                value={newNamaLengkap}
+                onChange={(e) => setNewNamaLengkap(e.target.value)}
+                className="px-3.5 py-2 text-xs rounded-xl bg-muted/40 focus:outline-none focus:ring-1 focus:ring-primary text-foreground"
+              />
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="grid grid-cols-2 gap-2">
+              <input
+                type="password"
+                placeholder="Password (min. 6 karakter)"
+                required
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="px-3.5 py-2 text-xs rounded-xl bg-muted/40 focus:outline-none focus:ring-1 focus:ring-primary text-foreground"
+              />
+
               <select
-                value={newCashierRole}
-                onChange={(e) => setNewCashierRole(e.target.value as any)}
-                className="flex-1 px-3.5 py-2 text-xs rounded-xl bg-muted/40 focus:outline-none focus:ring-1 focus:ring-primary text-foreground font-semibold"
+                value={newRole}
+                onChange={(e) => setNewRole(e.target.value as UserRole)}
+                className="px-3.5 py-2 text-xs rounded-xl bg-muted/40 focus:outline-none focus:ring-1 focus:ring-primary text-foreground font-bold"
               >
-                <option value="kasir">Kasir (Transaksi)</option>
-                <option value="admin">Admin (Akses Penuh)</option>
+                <option value="clrkcsr">Kasir (Staf POS)</option>
+                {isSuperAdmin && <option value="admmngrcsr">Admin Toko (Manajer)</option>}
               </select>
-
-              <button
-                type="submit"
-                disabled={isAddingCashier}
-                className="px-5 py-2 rounded-full bg-primary text-white font-bold text-xs hover:opacity-90 transition-opacity shadow-2xs cursor-pointer flex items-center gap-1.5 shrink-0"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Tambah</span>
-              </button>
             </div>
+
+            <button
+              type="submit"
+              disabled={isAddingUser}
+              className="w-full py-2.5 rounded-full bg-primary text-white font-bold text-xs hover:opacity-90 transition-opacity shadow-2xs cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>{isAddingUser ? "Menambahkan..." : "Tambah Pengguna"}</span>
+            </button>
           </form>
         </div>
+      </div>
+
+      {/* Keamanan Akun Saya (Ubah Password & Username Diri Sendiri) */}
+      <div className="p-6 rounded-3xl bg-card shadow-xs space-y-4">
+        <div className="flex items-center gap-2 pb-1">
+          <Key className="w-5 h-5 text-primary" />
+          <div>
+            <h3 className="font-black text-base text-foreground">Keamanan Akun Saya</h3>
+            <p className="text-xs text-muted-foreground">
+              {isSuperAdmin
+                ? "Super Admin: Ubah username dan password Anda langsung tanpa password lama"
+                : "Ubah password akun pribadi Anda dengan verifikasi password lama"}
+            </p>
+          </div>
+        </div>
+
+        {securityMsg && (
+          <div
+            className={`p-3 rounded-2xl text-xs font-bold flex items-center gap-2 ${
+              securityMsg.type === "success"
+                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                : "bg-red-500/10 text-red-600 dark:text-red-400"
+            }`}
+          >
+            {securityMsg.type === "success" ? (
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+            ) : (
+              <ShieldAlert className="w-4 h-4 shrink-0" />
+            )}
+            <span>{securityMsg.text}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleUpdateSelfSecurity} className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {/* Username Field */}
+          <div>
+            <label className="text-xs font-bold text-foreground block mb-1">
+              Username Saya
+            </label>
+            <input
+              type="text"
+              disabled={!isSuperAdmin}
+              value={selfUsername}
+              onChange={(e) => setSelfUsername(e.target.value.toLowerCase())}
+              className={`w-full px-3.5 py-2.5 text-xs rounded-xl bg-muted/40 font-mono font-bold ${
+                isSuperAdmin
+                  ? "text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  : "text-muted-foreground cursor-not-allowed opacity-75"
+              }`}
+            />
+            {!isSuperAdmin && (
+              <span className="text-[10px] text-muted-foreground mt-1 block">
+                Username dikunci oleh sistem
+              </span>
+            )}
+          </div>
+
+          {/* Password Lama (Hanya untuk Admin & Kasir) */}
+          {!isSuperAdmin && (
+            <div>
+              <label className="text-xs font-bold text-foreground block mb-1">
+                Password Saat Ini
+              </label>
+              <input
+                type="password"
+                placeholder="Masukkan password lama"
+                value={selfOldPassword}
+                onChange={(e) => setSelfOldPassword(e.target.value)}
+                className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-muted/40 focus:outline-none focus:ring-1 focus:ring-primary text-foreground"
+              />
+            </div>
+          )}
+
+          {/* Password Baru */}
+          <div>
+            <label className="text-xs font-bold text-foreground block mb-1">
+              Password Baru
+            </label>
+            <input
+              type="password"
+              placeholder="Minimal 6 karakter"
+              value={selfNewPassword}
+              onChange={(e) => setSelfNewPassword(e.target.value)}
+              className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-muted/40 focus:outline-none focus:ring-1 focus:ring-primary text-foreground"
+            />
+          </div>
+
+          <div className="md:col-span-3 flex justify-end pt-1">
+            <button
+              type="submit"
+              disabled={isSavingSecurity || (!selfNewPassword && selfUsername === currentCashier.username)}
+              className="px-6 py-2.5 rounded-full bg-primary text-white font-bold text-xs hover:opacity-90 disabled:opacity-40 transition-opacity cursor-pointer shadow-2xs flex items-center gap-1.5"
+            >
+              <Save className="w-3.5 h-3.5" />
+              <span>{isSavingSecurity ? "Menyimpan..." : "Perbarui Keamanan Akun"}</span>
+            </button>
+          </div>
+        </form>
       </div>
 
       {/* Data Management & Backup Tools (No outline) */}
@@ -931,6 +1242,96 @@ export function SettingsView({
           </div>
         </div>
       </div>
+
+      {/* Modal Edit User / Override Password Bawahan */}
+      {editingUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="w-full max-w-sm bg-card rounded-3xl p-6 shadow-2xl animate-pop-in space-y-4">
+            <div className="flex items-center justify-between pb-1">
+              <div className="flex items-center gap-2">
+                <Edit3 className="w-5 h-5 text-primary" />
+                <h4 className="font-black text-base text-foreground">Edit &amp; Reset Password</h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingUser(null)}
+                className="p-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-3 rounded-2xl bg-muted/40 text-xs space-y-1">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Username:</span>
+                <span className="font-mono font-bold text-foreground">@{editingUser.username}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Role:</span>
+                <span className="font-bold text-foreground">{ROLE_LABELS[editingUser.role] || editingUser.role}</span>
+              </div>
+            </div>
+
+            <form onSubmit={handleSaveEditUser} className="space-y-3.5">
+              <div>
+                <label className="text-xs font-bold text-foreground block mb-1">
+                  Nama Lengkap
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editNamaLengkap}
+                  onChange={(e) => setEditNamaLengkap(e.target.value)}
+                  className="w-full px-3.5 py-2 text-xs rounded-xl bg-muted/40 text-foreground font-semibold focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-foreground block mb-1">
+                  Set Password Baru (Langsung Timpa)
+                </label>
+                <input
+                  type="password"
+                  placeholder="Kosongkan jika tidak ingin diubah"
+                  value={editNewPassword}
+                  onChange={(e) => setEditNewPassword(e.target.value)}
+                  className="w-full px-3.5 py-2 text-xs rounded-xl bg-muted/40 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+                <span className="text-[10px] text-muted-foreground mt-1 block">
+                  Anda dapat langsung mengubah password user ini tanpa password lamanya.
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-muted/30">
+                <span className="text-xs font-bold text-foreground">Status Akun Aktif</span>
+                <input
+                  type="checkbox"
+                  checked={editIsActive}
+                  onChange={(e) => setEditIsActive(e.target.checked)}
+                  className="w-4 h-4 accent-primary rounded cursor-pointer"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingUser(null)}
+                  className="flex-1 py-2.5 rounded-full bg-muted/60 text-xs font-bold text-muted-foreground hover:bg-muted"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingEditUser}
+                  className="flex-1 py-2.5 rounded-full bg-primary text-white text-xs font-bold hover:opacity-90 shadow-sm"
+                >
+                  {isSavingEditUser ? "Menyimpan..." : "Simpan Perubahan"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

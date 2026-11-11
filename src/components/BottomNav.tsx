@@ -27,7 +27,7 @@ export function BottomNav({
   cartCount,
   onLock,
 }: BottomNavProps) {
-  const isAdmin = currentCashier.peran === "admin";
+  const isAdmin = currentCashier.role !== "clrkcsr" && currentCashier.peran !== "kasir";
 
   const tabs = [
     { id: "kasir", label: "Kasir", icon: ShoppingBag, badge: cartCount > 0 ? cartCount : undefined },
