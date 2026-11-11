@@ -61,9 +61,10 @@ async function resetSuperadminCLI() {
   console.log("\n============================================================");
   console.log("✅ RESET SUPER ADMIN BERHASIL");
   console.log("============================================================");
-  console.log(`Username Baru : ${newUsername}`);
-  console.log(`Password Baru : ${newPassword}`);
-  console.log(`Role          : spradmcsr (Super Admin)`);
+  console.log(`Database Target : ${process.env.TURSO_DATABASE_URL || "file:shrimpcashier-dev.db"}`);
+  console.log(`Username Baru   : ${newUsername}`);
+  console.log(`Password Baru   : ${newPassword}`);
+  console.log(`Role            : spradmcsr (Super Admin)`);
   console.log("Silakan login kembali melalui layar login web.");
   console.log("============================================================\n");
 }
