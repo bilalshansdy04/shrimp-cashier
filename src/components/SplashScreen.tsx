@@ -14,37 +14,35 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
     setIsFadingOut(true);
     setTimeout(() => {
       onFinish();
-    }, 450); // Durasi fade-out animasi halus
+    }, 450); // Transisi fade-out lembut
   };
 
   useEffect(() => {
-    // Upayakan putar video saat komponen dipasang
     if (videoRef.current) {
       videoRef.current.play().catch((err) => {
-        console.warn("Autoplay terhalang oleh browser, lanjut ke aplikasi:", err);
-        // Fallback jika browser memblokir video secara ketat
-        setTimeout(handleVideoEnd, 2000);
+        console.warn("Autoplay dicegah browser, melanjutkan:", err);
+        setTimeout(handleVideoEnd, 3000);
       });
     }
   }, []);
 
   return (
     <div
-      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-background select-none transition-opacity duration-500 ${
+      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white select-none transition-opacity duration-500 ${
         isFadingOut ? "opacity-0 pointer-events-none" : "opacity-100"
       }`}
     >
-      {/* Tombol Lewati / Skip Cepat */}
+      {/* Tombol Lewati Minimalis */}
       <button
         type="button"
         onClick={handleVideoEnd}
-        className="absolute top-6 right-6 px-3.5 py-1.5 rounded-full bg-card/60 hover:bg-card border border-border/40 text-xs font-bold text-muted-foreground hover:text-foreground transition-all cursor-pointer shadow-xs z-10"
+        className="absolute top-6 right-6 px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-xs font-bold text-gray-600 hover:text-gray-900 transition-all cursor-pointer shadow-xs z-10"
       >
         Lewati
       </button>
 
-      {/* Video Animasi Splash Screen */}
-      <div className="relative w-full max-w-md sm:max-w-lg px-6 flex flex-col items-center">
+      {/* Video Animasi Penuh Tanpa Wadah / Kartu */}
+      <div className="w-full max-w-2xl px-4 flex flex-col items-center justify-center">
         <video
           ref={videoRef}
           src="/splash.mp4"
@@ -53,13 +51,13 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
           playsInline
           onEnded={handleVideoEnd}
           onError={handleVideoEnd}
-          className="w-full h-auto max-h-[70vh] object-contain rounded-3xl shadow-2xl"
+          className="w-full h-auto max-h-[80vh] object-contain"
         />
 
-        {/* Loading Indicator Halus di Bawah Video */}
-        <div className="flex items-center gap-2 mt-6 text-xs font-bold text-muted-foreground">
+        {/* Status Loading Tipis */}
+        <div className="flex items-center gap-2 mt-4 text-xs font-semibold text-gray-400">
           <img src="/logo.svg" alt="ShrimpCashier" className="w-4 h-4 object-contain animate-spin" />
-          <span>Memuat sistem kasir...</span>
+          <span>Menyiapkan sistem kasir...</span>
         </div>
       </div>
     </div>
