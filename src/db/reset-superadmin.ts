@@ -18,11 +18,18 @@ async function resetSuperadminCLI() {
   console.log("🛠️  MEMULIHKAN AKUN SUPER ADMIN VIA CLI (SHRIMP CASHIER)...");
 
   const newUsername =
-    process.argv[2] || process.env.DEFAULT_SUPERADMIN_USERNAME || "spradmcsr";
+    process.argv[2] || process.env.DEFAULT_SUPERADMIN_USERNAME;
   const newPassword =
-    process.argv[3] ||
-    process.env.DEFAULT_SUPERADMIN_PASSWORD ||
-    "shrimpcashier406";
+    process.argv[3] || process.env.DEFAULT_SUPERADMIN_PASSWORD;
+
+  if (!newUsername || !newPassword) {
+    throw new Error(
+      "❌ USERNAME / PASSWORD TIDAK DITEMUKAN:\n" +
+      "Silakan berikan argumen CLI: `npm run admin:reset [username] [password]`\n" +
+      "atau set DEFAULT_SUPERADMIN_USERNAME dan DEFAULT_SUPERADMIN_PASSWORD di file .env!"
+    );
+  }
+
   const now = new Date().toISOString();
   const passwordHash = hashSync(newPassword, 12);
 

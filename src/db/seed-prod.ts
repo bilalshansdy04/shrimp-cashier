@@ -112,10 +112,16 @@ async function runProdMigrationAndSeed() {
   console.log("✓ Tabel database production siap.");
 
   const now = new Date().toISOString();
-  const superadminUsername =
-    process.env.DEFAULT_SUPERADMIN_USERNAME || "spradmcsr";
-  const superadminPassword =
-    process.env.DEFAULT_SUPERADMIN_PASSWORD || "shrimpcashier406";
+  const superadminUsername = process.env.DEFAULT_SUPERADMIN_USERNAME;
+  const superadminPassword = process.env.DEFAULT_SUPERADMIN_PASSWORD;
+
+  if (!superadminUsername || !superadminPassword) {
+    throw new Error(
+      "❌ VARIABEL LINGKUNGAN TIDAK LENGKAP:\n" +
+      "DEFAULT_SUPERADMIN_USERNAME dan DEFAULT_SUPERADMIN_PASSWORD wajib disetel di file environment (.env.production)!"
+    );
+  }
+
   const passwordHash = hashSync(superadminPassword, 12);
 
   // 2. Generate 24-character Emergency Master Recovery Key

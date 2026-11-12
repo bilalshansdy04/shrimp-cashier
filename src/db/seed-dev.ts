@@ -124,8 +124,16 @@ async function runDevMigrationAndSeed() {
   `);
 
   const now = new Date().toISOString();
-  const defaultPassword =
-    process.env.DEFAULT_SUPERADMIN_PASSWORD || "shrimpcashier406";
+  const superadminUsername = process.env.DEFAULT_SUPERADMIN_USERNAME;
+  const defaultPassword = process.env.DEFAULT_SUPERADMIN_PASSWORD;
+
+  if (!superadminUsername || !defaultPassword) {
+    throw new Error(
+      "❌ VARIABEL LINGKUNGAN TIDAK LENGKAP:\n" +
+      "DEFAULT_SUPERADMIN_USERNAME dan DEFAULT_SUPERADMIN_PASSWORD wajib disetel di file environment (.env.development)!"
+    );
+  }
+
   const passwordHash = hashSync(defaultPassword, 10);
 
   // 3. Seed Users (Super Admin, Admin, 2 Kasir)
@@ -133,7 +141,7 @@ async function runDevMigrationAndSeed() {
   const devUsers = [
     {
       id: "usr_superadmin",
-      username: process.env.DEFAULT_SUPERADMIN_USERNAME || "spradmcsr",
+      username: superadminUsername,
       namaLengkap: "Super Administrator",
       passwordHash,
       role: "spradmcsr" as const,
@@ -445,7 +453,7 @@ async function runDevMigrationAndSeed() {
   console.log("==========================================");
   console.log(`Database File : ${process.env.TURSO_DATABASE_URL}`);
   console.log(
-    `Super Admin   : ${process.env.DEFAULT_SUPERADMIN_USERNAME || "spradmcsr"} / ${defaultPassword} (Role: spradmcsr)`,
+    `Super Admin   : ${superadminUsername} / ${defaultPassword} (Role: spradmcsr)`,
   );
   console.log(
     `Admin Toko    : adm_toko / ${defaultPassword} (Role: admmngrcsr)`,
