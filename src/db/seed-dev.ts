@@ -124,7 +124,8 @@ async function runDevMigrationAndSeed() {
   `);
 
   const now = new Date().toISOString();
-  const defaultPassword = process.env.DEFAULT_SUPERADMIN_PASSWORD || "shrimpchasier406";
+  const defaultPassword =
+    process.env.DEFAULT_SUPERADMIN_PASSWORD || "shrimpcashier406";
   const passwordHash = hashSync(defaultPassword, 10);
 
   // 3. Seed Users (Super Admin, Admin, 2 Kasir)
@@ -349,8 +350,14 @@ async function runDevMigrationAndSeed() {
   }
 
   // 7. Seed Simulasi Transaksi 30 Hari (150+ transaksi)
-  console.log("📊 Menghasilkan 150+ riwayat transaksi realistis selama 30 hari...");
-  const paymentMethods: ("tunai" | "qris" | "transfer")[] = ["tunai", "qris", "transfer"];
+  console.log(
+    "📊 Menghasilkan 150+ riwayat transaksi realistis selama 30 hari...",
+  );
+  const paymentMethods: ("tunai" | "qris" | "transfer")[] = [
+    "tunai",
+    "qris",
+    "transfer",
+  ];
   const cashiers = [
     { id: "usr_kasir_pagi", nama: "Siti Rahma" },
     { id: "usr_kasir_sore", nama: "Budi Santoso" },
@@ -377,14 +384,17 @@ async function runDevMigrationAndSeed() {
 
       // Ambil 1-3 produk acak
       const numItems = 1 + Math.floor(Math.random() * 3);
-      const selectedProducts = [...devProducts].sort(() => 0.5 - Math.random()).slice(0, numItems);
+      const selectedProducts = [...devProducts]
+        .sort(() => 0.5 - Math.random())
+        .slice(0, numItems);
 
       let subtotal = 0;
       const itemsToInsert = [];
 
       for (let itemIdx = 0; itemIdx < selectedProducts.length; itemIdx++) {
         const prod = selectedProducts[itemIdx];
-        const varian = prod.varian[Math.floor(Math.random() * prod.varian.length)];
+        const varian =
+          prod.varian[Math.floor(Math.random() * prod.varian.length)];
         const qty = 1 + Math.floor(Math.random() * 2);
         const itemSubtotal = varian.harga * qty;
         subtotal += itemSubtotal;
@@ -402,8 +412,10 @@ async function runDevMigrationAndSeed() {
 
       const diskon = Math.random() > 0.8 ? 5000 : 0;
       const total = Math.max(0, subtotal - diskon);
-      const metode = paymentMethods[Math.floor(Math.random() * paymentMethods.length)];
-      const bayar = metode === "tunai" ? Math.ceil(total / 10000) * 10000 : total;
+      const metode =
+        paymentMethods[Math.floor(Math.random() * paymentMethods.length)];
+      const bayar =
+        metode === "tunai" ? Math.ceil(total / 10000) * 10000 : total;
       const kembali = bayar - total;
 
       await db.insert(schema.transactions).values({
@@ -432,10 +444,18 @@ async function runDevMigrationAndSeed() {
   console.log("🎉 SEEDER DEV SELESAI!");
   console.log("==========================================");
   console.log(`Database File : ${process.env.TURSO_DATABASE_URL}`);
-  console.log(`Super Admin   : ${process.env.DEFAULT_SUPERADMIN_USERNAME || "spradmcsr"} / ${defaultPassword} (Role: spradmcsr)`);
-  console.log(`Admin Toko    : adm_toko / ${defaultPassword} (Role: admmngrcsr)`);
-  console.log(`Kasir Pagi    : kasir_pagi / ${defaultPassword} (Role: clrkcsr)`);
-  console.log(`Kasir Sore    : kasir_sore / ${defaultPassword} (Role: clrkcsr)`);
+  console.log(
+    `Super Admin   : ${process.env.DEFAULT_SUPERADMIN_USERNAME || "spradmcsr"} / ${defaultPassword} (Role: spradmcsr)`,
+  );
+  console.log(
+    `Admin Toko    : adm_toko / ${defaultPassword} (Role: admmngrcsr)`,
+  );
+  console.log(
+    `Kasir Pagi    : kasir_pagi / ${defaultPassword} (Role: clrkcsr)`,
+  );
+  console.log(
+    `Kasir Sore    : kasir_sore / ${defaultPassword} (Role: clrkcsr)`,
+  );
   console.log("==========================================\n");
 }
 

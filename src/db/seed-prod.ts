@@ -112,8 +112,10 @@ async function runProdMigrationAndSeed() {
   console.log("✓ Tabel database production siap.");
 
   const now = new Date().toISOString();
-  const superadminUsername = process.env.DEFAULT_SUPERADMIN_USERNAME || "spradmcsr";
-  const superadminPassword = process.env.DEFAULT_SUPERADMIN_PASSWORD || "shrimpchasier406";
+  const superadminUsername =
+    process.env.DEFAULT_SUPERADMIN_USERNAME || "spradmcsr";
+  const superadminPassword =
+    process.env.DEFAULT_SUPERADMIN_PASSWORD || "shrimpcashier406";
   const passwordHash = hashSync(superadminPassword, 12);
 
   // 2. Generate 24-character Emergency Master Recovery Key

@@ -9,9 +9,11 @@
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
+    "db:seed": "npm run db:seed:dev",
     "db:seed:dev": "tsx --env-file=.env.development src/db/seed-dev.ts",
     "db:seed:prod": "tsx --env-file=.env.production src/db/seed-prod.ts",
     "admin:reset": "tsx --env-file=.env.production src/db/reset-superadmin.ts",
+    "admin:reset:prod": "tsx --env-file=.env.production src/db/reset-superadmin.ts",
     "admin:reset:dev": "tsx --env-file=.env.development src/db/reset-superadmin.ts"
   },
   "dependencies": {
