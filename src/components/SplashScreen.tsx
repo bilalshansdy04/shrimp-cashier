@@ -35,24 +35,41 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
     };
   }, [handleVideoEnd]);
 
-  // Autoplay video dengan audio
+  // Autoplay video dengan audio selalu aktif
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    // Coba putar langsung dengan suara
+    video.defaultMuted = false;
     video.muted = false;
+    video.volume = 1.0;
+
     video
       .play()
       .catch((err) => {
-        // Jika browser memblokir autoplay bersuara, putar muted otomatis agar tidak macet
-        console.warn("Autoplay bersuara dicegah kebijakan browser, memutar muted:", err);
+        // Jika browser memblokir autoplay bersuara sebelum ada user gesture
+        console.warn("Autoplay audio dicegah kebijakan browser, memutar sementara muted:", err);
         video.muted = true;
         video.play().catch((playErr) => {
           console.warn("Autoplay muted dicegah:", playErr);
           setTimeout(handleVideoEnd, 3000);
         });
       });
+
+    // Otomatis bunyikan pada sentuhan/interaksi pertama apa pun
+    const forceUnmute = () => {
+      if (videoRef.current) {
+        videoRef.current.muted = false;
+      }
+    };
+
+    window.addEventListener("pointerdown", forceUnmute, { capture: true, passive: true });
+    window.addEventListener("touchstart", forceUnmute, { capture: true, passive: true });
+
+    return () => {
+      window.removeEventListener("pointerdown", forceUnmute, { capture: true });
+      window.removeEventListener("touchstart", forceUnmute, { capture: true });
+    };
   }, [handleVideoEnd]);
 
   // Klik di mana saja pada layar untuk mengaktifkan suara jika sempat di-mute browser
