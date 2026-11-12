@@ -182,9 +182,7 @@ export default function Home() {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-background text-foreground">
-        <div className="w-16 h-16 rounded-3xl bg-card border border-border/40 p-2.5 flex items-center justify-center shadow-lg mb-4 animate-pulse">
-          <img src="/logo.svg" alt="ShrimpCashier" className="w-full h-full object-contain" />
-        </div>
+        <img src="/logo.svg" alt="ShrimpCashier" className="w-16 h-16 object-contain mb-4 animate-pulse" />
         <h2 className="text-xl font-black tracking-tight">{settings.nama || "ShrimpCashier"}</h2>
         <p className="text-xs text-muted-foreground mt-1">Menyiapkan sistem kasir...</p>
       </div>

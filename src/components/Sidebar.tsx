@@ -80,9 +80,7 @@ export function Sidebar({
       <aside className="hidden md:flex flex-col w-20 lg:w-64 bg-card border-r border-border shrink-0 select-none transition-all">
         {/* Logo and Brand */}
         <div className="flex items-center gap-3 p-4 lg:p-5 border-b border-border">
-          <div className="w-10 h-10 rounded-2xl bg-card border border-border/40 p-1.5 flex items-center justify-center shadow-xs shrink-0 overflow-hidden">
-            <img src="/logo.svg" alt="ShrimpCashier Logo" className="w-full h-full object-contain" />
-          </div>
+          <img src="/logo.svg" alt="ShrimpCashier Logo" className="w-9 h-9 object-contain shrink-0" />
           <div className="hidden lg:block min-w-0">
             <h1 className="font-extrabold text-base tracking-tight truncate text-foreground">
               {settings.nama || "ShrimpCashier"}

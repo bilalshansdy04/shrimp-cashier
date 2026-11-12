@@ -56,9 +56,7 @@ export function TopHeader({ settings, currentCashier, onLock }: TopHeaderProps) 
     <header className="px-4 lg:px-8 py-3.5 flex items-center justify-between shrink-0 bg-card/60 backdrop-blur-md">
       {/* Brand & Store Name */}
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-2xl bg-card border border-border/40 p-1 flex items-center justify-center shadow-xs shrink-0 overflow-hidden">
-          <img src="/logo.svg" alt="ShrimpCashier Logo" className="w-full h-full object-contain" />
-        </div>
+        <img src="/logo.svg" alt="ShrimpCashier Logo" className="w-8 h-8 object-contain shrink-0" />
         <div>
           <h1 className="font-extrabold text-sm sm:text-base text-foreground tracking-tight leading-none truncate max-w-[180px] sm:max-w-xs">
             {settings.nama || "ShrimpCashier"}

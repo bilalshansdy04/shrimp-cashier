@@ -51,7 +51,7 @@ export function SplashScreen({ onFinish }: SplashScreenProps) {
           playsInline
           onEnded={handleVideoEnd}
           onError={handleVideoEnd}
-          className="w-full h-auto max-h-[80vh] object-contain"
+          className="w-full h-auto max-h-[80vh] object-contain mix-blend-multiply outline-none border-none pointer-events-none"
         />
 
         {/* Status Loading Tipis */}
