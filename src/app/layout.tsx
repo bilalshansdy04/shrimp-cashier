@@ -15,6 +15,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "ShrimpCashier — Modern Interactive POS",
   description: "Aplikasi kasir modern, interaktif, cepat, tanpa outline, dengan bottom navigation.",
+  icons: {
+    icon: "/logo.svg",
+    shortcut: "/logo.svg",
+    apple: "/logo.svg",
+  },
 };
 
 export default function RootLayout({

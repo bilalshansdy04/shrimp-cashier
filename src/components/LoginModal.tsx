@@ -121,8 +121,8 @@ export function LoginModal({ settings, onLoginSuccess }: LoginModalProps) {
       >
         {/* Brand Header */}
         <div className="flex flex-col items-center text-center mb-6">
-          <div className="w-16 h-16 rounded-3xl bg-primary text-white flex items-center justify-center font-black text-3xl shadow-lg shadow-black/10 mb-3.5">
-            🦐
+          <div className="w-16 h-16 rounded-3xl bg-card border border-border/40 p-2 flex items-center justify-center shadow-lg shadow-black/5 mb-3.5 overflow-hidden">
+            <img src="/logo.svg" alt="ShrimpCashier Logo" className="w-full h-full object-contain" />
           </div>
           <h2 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
             {settings.nama || "ShrimpCashier"}

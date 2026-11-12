@@ -13,12 +13,14 @@ import { LoginModal } from "@/components/LoginModal";
 import { PaymentModal } from "@/components/PaymentModal";
 import { LogoutConfirmModal } from "@/components/LogoutConfirmModal";
 import { SuccessReceiptModal } from "@/components/SuccessReceiptModal";
+import { SplashScreen } from "@/components/SplashScreen";
 import { ThermalReceipt } from "@/components/ThermalReceipt";
 import { playCashChime, playBeep } from "@/lib/audio";
 import { applyPalette, loadSavedPalette } from "@/lib/theme";
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isSplashDone, setIsSplashDone] = useState<boolean>(false);
   const [settings, setSettings] = useState<StoreSettings>({
     id: "default",
     nama: "ShrimpCashier",
@@ -173,14 +175,18 @@ export default function Home() {
     setActiveTab("kasir");
   };
 
+  if (!isSplashDone) {
+    return <SplashScreen onFinish={() => setIsSplashDone(true)} />;
+  }
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-background text-foreground">
-        <div className="w-16 h-16 rounded-3xl bg-primary/10 text-primary flex items-center justify-center text-3xl mb-4 animate-bounce">
-          🦐
+        <div className="w-16 h-16 rounded-3xl bg-card border border-border/40 p-2.5 flex items-center justify-center shadow-lg mb-4 animate-pulse">
+          <img src="/logo.svg" alt="ShrimpCashier" className="w-full h-full object-contain" />
         </div>
-        <h2 className="text-xl font-black tracking-tight">ShrimpCashier</h2>
-        <p className="text-xs text-muted-foreground mt-1">Memuat database kasir...</p>
+        <h2 className="text-xl font-black tracking-tight">{settings.nama || "ShrimpCashier"}</h2>
+        <p className="text-xs text-muted-foreground mt-1">Menyiapkan sistem kasir...</p>
       </div>
     );
   }
